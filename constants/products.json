@@ -1,0 +1,46 @@
+[
+    {
+      "id": "1",
+      "name": "iPhone 15 Pro",
+      "description": "Le dernier smartphone d'Apple avec une puce A17 Pro.",
+      "price": 1299.99,
+      "stock": 15,
+      "category": "Électronique",
+      "vendeur": "TechStore",
+      "image": "https://via.placeholder.com/150/0000FF/808080?Text=iPhone15",
+      "isActive": true
+    },
+    {
+      "id": "2",
+      "name": "Samsung Galaxy S24",
+      "description": "Le flagship de Samsung avec des fonctionnalités IA avancées.",
+      "price": 1199.00,
+      "stock": 20,
+      "category": "Électronique",
+      "vendeur": "ElectroWorld",
+      "image": "https://via.placeholder.com/150/FF0000/FFFFFF?Text=GalaxyS24",
+      "isActive": true
+    },
+    {
+      "id": "3",
+      "name": "Casque Sony WH-1000XM5",
+      "description": "Casque à réduction de bruit de pointe.",
+      "price": 349.50,
+      "stock": 30,
+      "category": "Audio",
+      "vendeur": "TechStore",
+      "image": "https://via.placeholder.com/150/00FF00/000000?Text=SonyXM5",
+      "isActive": true
+    },
+    {
+      "id": "4",
+      "name": "Livre 'React Native in Action'",
+      "description": "Apprenez à construire des applications mobiles natives.",
+      "price": 45.99,
+      "stock": 50,
+      "category": "Livres",
+      "vendeur": "BookShop",
+      "image": "https://via.placeholder.com/150/FFFF00/000000?Text=Book",
+      "isActive": true
+    }
+  ]
