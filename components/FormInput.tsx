@@ -1,23 +1,28 @@
-import { View, Text, TextInput, TextStyle, StyleProp, StyleSheet } from 'react-native'
+import { View, Text, TextInput, TextStyle, StyleProp, StyleSheet, Platform } from 'react-native'
 import React from 'react'
 import { Octicons } from '@expo/vector-icons'
+import Colors from '../constants/Colors'
 
 export type inputProps = {
     labelValue:string|undefined,
     label:string,
     icon?:string,
-    isPassword:boolean,
+    isPassword?:boolean,
     handleChange?:((text: string) => void) | undefined,
+    inputStyle?: StyleProp<TextStyle>,
+    placeholderTextColor?: string,
 }
 
-const FormInput = ({labelValue,label,icon,handleChange,isPassword}:inputProps) => {
+const FormInput = ({labelValue,label,icon,handleChange,isPassword=false, inputStyle, placeholderTextColor}:inputProps) => {
+    const theme = Colors.light;
     return (
         <View style={styles.inputWrapper}>
-            {icon && <Octicons name={icon as keyof typeof Octicons.glyphMap} size={20} color="#0005" />}
-            <TextInput placeholder={label} style={styles.input}
+            {icon && <Octicons name={icon as keyof typeof Octicons.glyphMap} size={20} color={theme.tint} style={{marginRight: 6}} />}
+            <TextInput placeholder={label} style={[styles.input, inputStyle]}
                 value={labelValue}
                 onChangeText={handleChange}
                 secureTextEntry={isPassword}
+                placeholderTextColor={placeholderTextColor || '#8ca0b3'}
             />
         </View>
     )
@@ -27,20 +32,27 @@ export default FormInput
 const styles=StyleSheet.create({
     inputWrapper: {
         width: "100%",
-        height: 55,
-        backgroundColor: '#f7f9ef',
+        height: 48,
+        backgroundColor: Colors.light.background,
         borderWidth: 1,
-        borderColor: '#000',
-        borderRadius: 6,
+        borderColor: Colors.light.tabIconDefault,
+        borderRadius: 14,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 8,
-        gap: 8,
-        marginBottom: 10
-},
-input: {
-    color: "#0005",
-    outline: 'none',
-    padding: 2,
-    width: '100%'
-}})
+        paddingHorizontal: 14,
+        paddingVertical: 0,
+        marginBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.07,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+    input: {
+        color: Colors.light.text,
+        fontSize: 16,
+        flex: 1,
+        paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+        backgroundColor: 'transparent',
+    }
+})

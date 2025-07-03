@@ -4,7 +4,7 @@ import { Button } from 'react-native-elements'
 import FormInput from '@/components/FormInput'
 import { Redirect, useRouter } from 'expo-router'
 import { validateEmail, validatePassword } from '@/utils/validation'
-import { registerUser } from '@/services/authService'
+import { useAuth } from '@/contexts/AuthContext'
 
 const Signup = () => {
     const router = useRouter()
@@ -15,6 +15,7 @@ const Signup = () => {
     const [passwordError, setPasswordError] = useState<string | null>(null)
 
     const [isLoading, setIsLoading] = useState(false)
+    const { signup: authRegister } = useAuth()
     const ToLogin = () => { router.push('/login') }
     const handleEmailChange = (text: string) => {
         setEmail(text)
@@ -50,7 +51,7 @@ const Signup = () => {
         setEmailError(null);
         setPasswordError(null);
         try{
-            await registerUser(email, username, password);
+            await authRegister(username, email, password);
             router.push('/(auth)/login')
         }catch (error: any) {
             if (error.message.includes('email')) {
