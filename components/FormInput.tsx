@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TextStyle, StyleProp, StyleSheet, Platform } from 'react-native'
+import { View, Text, TextInput, TextStyle, StyleProp, StyleSheet, Platform, TextInputProps } from 'react-native'
 import React from 'react'
 import { Octicons } from '@expo/vector-icons'
 import Colors from '../constants/Colors'
@@ -11,9 +11,9 @@ export type inputProps = {
     handleChange?:((text: string) => void) | undefined,
     inputStyle?: StyleProp<TextStyle>,
     placeholderTextColor?: string,
-}
+} & TextInputProps;
 
-const FormInput = ({labelValue,label,icon,handleChange,isPassword=false, inputStyle, placeholderTextColor}:inputProps) => {
+const FormInput = ({labelValue,label,icon,handleChange,isPassword=false, inputStyle, placeholderTextColor, ...rest}:inputProps) => {
     const theme = Colors.light;
     return (
         <View style={styles.inputWrapper}>
@@ -23,6 +23,7 @@ const FormInput = ({labelValue,label,icon,handleChange,isPassword=false, inputSt
                 onChangeText={handleChange}
                 secureTextEntry={isPassword}
                 placeholderTextColor={placeholderTextColor || '#8ca0b3'}
+                {...rest}
             />
         </View>
     )
