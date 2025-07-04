@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
-import { Product } from '../contexts/ProductContext';
+import { Product } from '../types/Product';
 import ProductOptionsModal from './ProductOptionsModal';
 
 interface ProductItemProps {
@@ -15,10 +15,11 @@ interface ProductItemProps {
 const { width } = Dimensions.get('window');
 
 /**
- * Carte produit moderne avec icône à gauche, contenu au centre et menu à droite
+ * Carte produit moderne avec image à gauche, contenu au centre et menu à droite
  */
 const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, onPress }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const isLowStock = product.stock <= 5;
   const isInactive = !product.isActive;
 
@@ -41,22 +42,41 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
     setModalVisible(true);
   };
 
-  // Déterminer la couleur de l'icône basée sur la catégorie
-  const getIconData = (category: string) => {
-    const categoryColors: Record<string, { bg: string; icon: string; color: string }> = {
-      'Électronique': { bg: '#E3F2FD', icon: 'phone-portrait-outline', color: '#1976D2' },
-      'Vêtements': { bg: '#F3E5F5', icon: 'shirt-outline', color: '#7B1FA2' },
-      'Maison': { bg: '#E8F5E8', icon: 'home-outline', color: '#388E3C' },
-      'Sport': { bg: '#FFF3E0', icon: 'fitness-outline', color: '#F57C00' },
-      'Livres': { bg: '#FFF8E1', icon: 'book-outline', color: '#F9A825' },
-      'Automobile': { bg: '#FFEBEE', icon: 'car-outline', color: '#D32F2F' },
-      default: { bg: '#F5F5F5', icon: 'cube-outline', color: Colors.light.tint }
+  // ✅ NOUVEAU : Gestion de l'erreur d'image
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  // ✅ NOUVEAU : Génération des initiales pour l'image de secours
+  const getProductInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
+  // ✅ NOUVEAU : Déterminer la couleur de fond basée sur la catégorie
+  const getCategoryColor = (category: string) => {
+    const categoryColors: Record<string, string> = {
+      'Électronique': '#E3F2FD',
+      'Vêtements': '#F3E5F5',
+      'Maison': '#E8F5E8',
+      'Sport': '#FFF3E0',
+      'Livres': '#FFF8E1',
+      'Informatique': '#E1F5FE',
+      'Beauté': '#FCE4EC',
+      'Jouets': '#F1F8E9',
+      'Automobile': '#FFEBEE',
+      default: '#F5F5F5'
     };
     
     return categoryColors[category] || categoryColors['default'];
   };
 
-  const iconData = getIconData(product.category);
+  const categoryColor = getCategoryColor(product.category);
+  const productInitials = getProductInitials(product.name);
 
   return (
     <>
@@ -69,13 +89,23 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
         activeOpacity={0.7}
         disabled={isInactive}
       >
-        {/* Icône de catégorie à gauche */}
-        <View style={[styles.iconContainer, { backgroundColor: iconData.bg }]}>
-          <Ionicons 
-            name={iconData.icon as any} 
-            size={28} 
-            color={iconData.color} 
-          />
+        {/* ✅ REMPLACÉ : Image du produit à la place de l'icône */}
+        <View style={styles.imageContainer}>
+          {!imageError && product.image ? (
+            <Image
+              source={{ uri: product.image }}
+              style={styles.productImage}
+              resizeMode="cover"
+              onError={handleImageError}
+            />
+          ) : (
+            // ✅ Image de secours avec initiales
+            <View style={[styles.fallbackImage, { backgroundColor: categoryColor }]}>
+              <Text style={styles.initialsText}>{productInitials}</Text>
+            </View>
+          )}
+          
+          {/* Badge stock faible */}
           {isLowStock && (
             <View style={styles.stockBadge}>
               <Text style={styles.stockBadgeText}>!</Text>
@@ -167,14 +197,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
     opacity: 0.7,
   },
-  iconContainer: {
+  // ✅ NOUVEAU : Container pour l'image (même taille que l'ancienne icône)
+  imageContainer: {
     width: 56,
     height: 56,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginRight: 16,
     position: 'relative',
+    overflow: 'hidden',
+  },
+  // ✅ NOUVEAU : Styles pour l'image du produit
+  productImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+  },
+  // ✅ NOUVEAU : Image de secours avec initiales
+  fallbackImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  // ✅ NOUVEAU : Style pour les initiales
+  initialsText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.light.tint,
+    textAlign: 'center',
   },
   stockBadge: {
     position: 'absolute',

@@ -1,37 +1,39 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
+import { NavigatorScreenParams } from '@react-navigation/native';
 
-// Types pour la navigation principale
+// Stack d'authentification
+export type AuthStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+};
+
+// Stack des onglets principaux
+export type TabStackParamList = {
+  Home: undefined;
+  Profile: undefined;
+};
+
+// Stack principal de l'application
 export type RootStackParamList = {
-  MainTabs: undefined;
+  // Navigation principale
+  MainTabs: NavigatorScreenParams<TabStackParamList>;
+
+  // Écrans modaux/pages
   AddProduct: undefined;
   EditProfile: undefined;
   ProductDetail: { productId: string };
   ProductEdit: { productId: string };
 };
 
-// Types pour les onglets
-export type TabParamList = {
-  Home: undefined;
-  Profile: undefined;
-};
+// Types d'union pour la navigation
+export type AllStackParamList = RootStackParamList & AuthStackParamList;
 
-// Types pour l'authentification
-export type AuthStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-};
-
-// Props types pour les écrans
-export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
+// Props pour les écrans avec navigation typée
+export type RootScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
   RootStackParamList,
   T
->;
-
-export type TabScreenProps<T extends keyof TabParamList> = CompositeScreenProps<
-  BottomTabScreenProps<TabParamList, T>,
-  RootStackScreenProps<keyof RootStackParamList>
 >;
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<
@@ -39,8 +41,14 @@ export type AuthScreenProps<T extends keyof AuthStackParamList> = NativeStackScr
   T
 >;
 
+export type TabScreenProps<T extends keyof TabStackParamList> = CompositeScreenProps<
+  BottomTabScreenProps<TabStackParamList, T>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+// Types de navigation unifiés
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
+    interface RootParamList extends AllStackParamList {}
   }
 }

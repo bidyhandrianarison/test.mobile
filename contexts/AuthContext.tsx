@@ -130,12 +130,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
       try {
+        console.log('AuthContext - Tentative de connexion:', email);
         const user = await loginUser(email, password);
-        const userData = { id: user.id || String(Date.now()), name: user.name || '', email: user.email };
+        const userData = { 
+          id: user.id || String(Date.now()), 
+          name: user.name || user.username || '', 
+          email: user.email 
+        };
+        
+        // ✅ CORRECTION : Sauvegarder dans AsyncStorage AVANT de dispatcher
         await AsyncStorage.setItem('user', JSON.stringify(userData));
+        console.log('AuthContext - Utilisateur sauvegardé:', userData);
+        
+        // ✅ CORRECTION : Dispatcher après la sauvegarde
         dispatch({ type: 'LOGIN', payload: userData });
+        console.log('AuthContext - Login réussi, isAuthenticated devrait être true');
+        
         return true;
       } catch (e: any) {
+        console.error('AuthContext - Erreur de connexion:', e);
         dispatch({ type: 'SET_ERROR', payload: e.message });
         dispatch({ type: 'SET_LOADING', payload: false });
         return false;

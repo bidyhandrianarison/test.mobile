@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useProducts } from '../contexts/ProductContext';
-import { Product } from '../contexts/ProductContext';
+import { Product } from '../types/Product';
 import { Feather } from '@expo/vector-icons';
 import { validateProductForm } from '../utils/validation';
 import ImagePickerField from '../components/ImagePickerField';

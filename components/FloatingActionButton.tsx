@@ -28,7 +28,7 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           height: size,
           borderRadius: size / 2,
         },
-        style // Permet de passer un style personnalisé
+        style // ✅ Le style personnalisé (avec bottom dynamique) sera appliqué ici
       ]}
       onPress={onPress}
       activeOpacity={0.8}
@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+    zIndex: 1000,
   },
 });
 

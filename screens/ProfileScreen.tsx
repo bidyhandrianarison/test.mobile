@@ -8,21 +8,24 @@ import {
   Image, 
   Alert,
   SafeAreaView,
-  Dimensions
+  Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import UserStats from '../components/UserStats';
-// SUPPRIMÉ: import FloatingActionButton from '../components/FloatingActionButton';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  // ✅ CALCUL CORRECT : Même hauteur que dans HomeScreen
+  const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
+  const safeTabBarHeight = tabBarHeight + Math.max(insets.bottom, 0);
 
   const handleLogout = async () => {
     Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
@@ -45,8 +48,15 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header avec dégradé basé sur votre couleur principale */}
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        // ✅ CORRECTION : ContentContainerStyle avec padding bottom correct
+        contentContainerStyle={{
+          paddingBottom: safeTabBarHeight + 20
+        }}
+      >
+        {/* Header avec dégradé */}
         <LinearGradient
           colors={['#4DA6E8', Colors.light.tint]}
           style={styles.headerGradient}
@@ -83,7 +93,7 @@ const ProfileScreen = () => {
           <Text style={styles.userEmail}>{user.email}</Text>
         </View>
 
-        {/* Statistiques */}
+        {/* Composant de statistiques intégré */}
         <UserStats />
 
         {/* Bouton de déconnexion */}
@@ -93,16 +103,12 @@ const ProfileScreen = () => {
             <Text style={styles.logoutButtonText}>Se déconnecter</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Espace en bas - PLUS BESOIN DE FAB */}
-        <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      {/* SUPPRIMÉ: FloatingActionButton */}
     </SafeAreaView>
   );
 };
 
+// Styles restent identiques
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -112,25 +118,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerGradient: {
-    height: 220,
-    width: '100%',
+    height: 200,
     position: 'relative',
+    paddingHorizontal: 20,
+    paddingTop: 50,
   },
   editButton: {
     position: 'absolute',
-    top: 60,
+    top: 50,
     right: 20,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
   },
   whiteRoundedSection: {
     position: 'absolute',
@@ -145,65 +147,63 @@ const styles = StyleSheet.create({
   avatarContainer: {
     alignItems: 'center',
     marginTop: -60,
+    marginBottom: 20,
   },
   avatarWrapper: {
-    position: 'relative',
-  },
-  avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    borderWidth: 6,
-    borderColor: Colors.light.background,
-    shadowColor: Colors.light.tint,
+    backgroundColor: Colors.light.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 8,
   },
+  avatar: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+  },
   userInfo: {
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   userName: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: Colors.light.text,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
     color: Colors.light.tabIconDefault,
-    fontWeight: '500',
   },
   actionsContainer: {
-    padding: 24,
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginTop: 16,
   },
   logoutButton: {
-    backgroundColor: '#FF6B6B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FF6B6B',
+    borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 28,
-    gap: 10,
-    minWidth: 180,
+    paddingHorizontal: 24,
     shadowColor: '#FF6B6B',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 6,
+    gap: 8,
   },
   logoutButtonText: {
     color: Colors.light.background,
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 16,
-  },
-  bottomSpacer: {
-    height: 40, // Réduit car plus de FAB
   },
 });
 

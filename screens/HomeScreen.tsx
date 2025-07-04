@@ -1,21 +1,30 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text as RNText, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text as RNText, Platform } from 'react-native';
 import { Text } from 'react-native-elements';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useProducts } from '../contexts/ProductContext';
-import ProductList from '../components/ProductList';
+import { FlatList } from 'react-native';
 import FormInput from '../components/FormInput';
-import { Product } from '../services/productService';
+import { Product } from '../types/Product';
 import { Ionicons } from '@expo/vector-icons';
 import FilterModal, { FiltersState } from '../components/FilterModal';
 import Colors from '../constants/Colors';
 import LoadingSpinner from '../components/LoadingSpinner';
 import FloatingActionButton from '../components/FloatingActionButton';
+import ProductItem from '../components/ProductItem';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types/navigation';
+
+// Type de navigation spécifique
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const { products, fetchProducts, isLoading } = useProducts();
+  const insets = useSafeAreaInsets();
+  
   const [search, setSearch] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [filters, setFilters] = useState<FiltersState>({
@@ -25,6 +34,25 @@ const HomeScreen = () => {
     maxPrice: '',
     activeOnly: false,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 8;
+
+  // ✅ CALCUL CORRECT : Hauteur de la tab bar pour le positionnement
+  const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
+  const safeTabBarHeight = tabBarHeight + Math.max(insets.bottom, 0);
+
+  // ✅ NOUVEAU : Calcul du nombre de filtres actifs
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filters.category) count++;
+    if (filters.seller) count++;
+    if (filters.minPrice) count++;
+    if (filters.maxPrice) count++;
+    if (filters.activeOnly) count++;
+    return count;
+  }, [filters]);
+
+  const hasActiveFilters = activeFiltersCount > 0;
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
@@ -44,6 +72,19 @@ const HomeScreen = () => {
     return filtered;
   }, [products, filters, search]);
 
+  // Calcul des produits paginés
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, currentPage, ITEMS_PER_PAGE]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredProducts.length, search, filters]);
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -53,90 +94,173 @@ const HomeScreen = () => {
   };
 
   const handleAddProduct = () => {
-    navigation.navigate('AddProduct' as never);
+    navigation.navigate('AddProduct');
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const categories = Array.from(new Set(products.map(p => p.category)));
   const sellers = Array.from(new Set(products.map(p => p.vendeurs)));
 
+  // Header Component pour la FlatList
+  const renderHeader = () => (
+    <>
+      {/* Section info */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Tous les produits</Text>
+        {search.trim().length > 0 && (
+          <Text style={styles.searchResultText}>
+            Résultats pour "{search}"
+          </Text>
+        )}
+        {totalPages > 1 && (
+          <Text style={styles.pageIndicator}>
+            Page {currentPage} sur {totalPages}
+          </Text>
+        )}
+      </View>
+    </>
+  );
+
+  // Footer Component pour la pagination
+  const renderFooter = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <View style={styles.paginationContainer}>
+        <View style={styles.paginationControls}>
+          <TouchableOpacity
+            style={[
+              styles.paginationButton,
+              currentPage === 1 && styles.disabledButton
+            ]}
+            onPress={handlePreviousPage}
+            disabled={currentPage === 1}
+          >
+            <Text style={[
+              styles.prevNextText,
+              currentPage === 1 && styles.disabledText
+            ]}>
+              Précédent
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageInfo}>
+            {currentPage} / {totalPages}
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.paginationButton,
+              currentPage === totalPages && styles.disabledButton
+            ]}
+            onPress={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            <Text style={[
+              styles.prevNextText,
+              currentPage === totalPages && styles.disabledText
+            ]}>
+              Suivant
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#4DA6E8', Colors.light.tint]}
+          style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Text style={styles.welcomeText}>Bienvenue</Text>
+          <Text style={styles.headerTitle}>Découvrez nos produits</Text>
+        </LinearGradient>
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Header avec gradient bleu */}
+      {/* ✅ Header avec gradient + barre de recherche intégrée */}
       <LinearGradient
         colors={['#4DA6E8', Colors.light.tint]}
         style={styles.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        {/* Titre dans le header */}
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Découvrir les Produits</Text>
-          <Text style={styles.headerSubtitle}>
-            {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} disponible{filteredProducts.length > 1 ? 's' : ''}
-          </Text>
-        </View>
-
-        {/* Barre de recherche + bouton filtre dans le gradient */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchRow}>
-            <View style={styles.searchContainer}>
-              <FormInput
-                label="Rechercher des produits"
-                labelValue={search}
-                icon="search"
-                handleChange={setSearch}
-                placeholderTextColor={Colors.light.tabIconDefault}
-                inputStyle={{ color: Colors.light.text }}
-              />
-            </View>
-            <TouchableOpacity 
-              style={styles.filterBtn} 
-              onPress={() => setFilterModalVisible(true)} 
-              activeOpacity={0.8}
-            >
-              <Ionicons name="options" size={24} color={Colors.light.tint} />
-            </TouchableOpacity>
+        <Text style={styles.welcomeText}>Bienvenue</Text>
+        <Text style={styles.headerTitle}>Découvrez nos produits</Text>
+        
+        {/* ✅ DÉPLACÉ : Barre de recherche et filtre dans le header bleu */}
+        <View style={styles.searchRow}>
+          <View style={{ flex: 1 }}>
+            <FormInput
+              label="Rechercher des produits"
+              labelValue={search}
+              icon="search"
+              handleChange={setSearch}
+              placeholderTextColor="rgba(255,255,255,0.7)"
+              inputStyle={styles.searchInputInHeader}
+              style={styles.searchFormInputInHeader}
+            />
           </View>
+          <TouchableOpacity 
+            style={styles.filterBtnInHeader} 
+            onPress={() => setFilterModalVisible(true)} 
+            activeOpacity={0.8}
+          >
+            <Ionicons name="options" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
-
-        {/* Zone blanche arrondie en bas */}
-        <View style={styles.whiteRoundedSection} />
       </LinearGradient>
 
-      {/* Container blanc avec les produits */}
-      <View style={styles.productsContainer}>
-        <ScrollView 
-          style={styles.scrollView} 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* Titre de section */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Tous les produits</Text>
-            {search.trim().length > 0 && (
-              <Text style={styles.searchResultText}>
-                Résultats pour "{search}"
-              </Text>
-            )}
-          </View>
+      {/* Products list */}
+      <FlatList
+        data={paginatedData}
+        renderItem={({ item }) => (
+          <ProductItem
+            product={item}
+            onPress={() => handlePressProduct(item)}
+          />
+        )}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: safeTabBarHeight + 20 }
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
 
-          {/* Liste des produits */}
-          {isLoading ? (
-            <LoadingSpinner />
-          ) : (
-            <ProductList products={filteredProducts} onPress={handlePressProduct} />
-          )}
-        </ScrollView>
-      </View>
-
-      {/* Bouton flottant d'ajout - UNIQUEMENT sur HomeScreen */}
+      {/* FAB avec position corrigée */}
       <FloatingActionButton 
         onPress={handleAddProduct} 
         color={Colors.light.tint}
-        style={styles.fab}
+        style={[
+          styles.fab,
+          { bottom: safeTabBarHeight + 20 }
+        ]}
       />
 
-      {/* Modal de filtres */}
       <FilterModal
         visible={filterModalVisible}
         onClose={() => setFilterModalVisible(false)}
@@ -157,93 +281,65 @@ const HomeScreen = () => {
   );
 };
 
+// ✅ STYLES MIS À JOUR
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9ff',
   },
+  listContent: {
+    // Pas de paddingBottom fixe - géré dynamiquement
+  },
+  // ✅ Header agrandi pour inclure la recherche
   headerGradient: {
-    paddingTop: 60,
-    paddingBottom: 40,
     paddingHorizontal: 20,
-    position: 'relative',
+    paddingTop: 60,
+    paddingBottom: 20, // Espace pour la recherche
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
-  headerContent: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.light.background,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
+  welcomeText: {
     fontSize: 16,
     color: 'rgba(255,255,255,0.9)',
-    textAlign: 'center',
-    fontWeight: '500',
+    marginBottom: 4,
   },
-  searchSection: {
-    marginBottom: 20,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 20, // Espace avant la recherche
   },
+  // ✅ NOUVEAU : Styles pour la recherche dans le header
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  searchContainer: {
-    flex: 1,
+  searchFormInputInHeader: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderWidth: 1,
   },
-  filterBtn: {
-    backgroundColor: Colors.light.background,
+  searchInputInHeader: {
+    color: '#fff',
+  },
+  filterBtnInHeader: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
-  whiteRoundedSection: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 40,
-    backgroundColor: '#f8f9ff',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-  },
-  productsContainer: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-    marginTop: -20,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 120, // Plus d'espace pour le FAB
-  },
+  
   sectionHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.light.background,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
     color: Colors.light.text,
     marginBottom: 4,
@@ -253,12 +349,56 @@ const styles = StyleSheet.create({
     color: Colors.light.tabIconDefault,
     fontStyle: 'italic',
   },
-  // Style pour le FAB spécifique au HomeScreen
+  pageIndicator: {
+    fontSize: 14,
+    color: Colors.light.tint,
+    fontWeight: '600',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+  },
   fab: {
     position: 'absolute',
-    bottom: 100, // Au-dessus de la bottom tab bar
     right: 24,
     zIndex: 1000,
+  },
+  paginationContainer: {
+    backgroundColor: Colors.light.background,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    marginTop: 16,
+  },
+  paginationControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  paginationButton: {
+    backgroundColor: Colors.light.tint,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  disabledButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  prevNextText: {
+    color: Colors.light.background,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  disabledText: {
+    color: Colors.light.tabIconDefault,
+  },
+  pageInfo: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.tint,
   },
 });
 

@@ -1,33 +1,29 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 
 interface StatCardProps {
   title: string;
-  value: number;
-  iconName: string;
-  color?: string;
-  onPress?: () => void;
+  value: string | number;
+  iconName: keyof typeof Ionicons.glyphMap;
+  color: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  iconName,
-  color = Colors.light.tint,
-  onPress
-}) => {
-  const CardComponent = onPress ? TouchableOpacity : View;
-
+/**
+ * Carte de statistique avec icône, titre et valeur
+ */
+const StatCard: React.FC<StatCardProps> = ({ title, value, iconName, color }) => {
   return (
-    <CardComponent style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={iconName as any} size={24} color={color} />
+    <View style={[styles.card, { borderLeftColor: color }]}>
+      <View style={styles.header}>
+        <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
+          <Ionicons name={iconName} size={20} color={color} />
+        </View>
       </View>
       <Text style={styles.value}>{value}</Text>
       <Text style={styles.title}>{title}</Text>
-    </CardComponent>
+    </View>
   );
 };
 
@@ -35,34 +31,35 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: Colors.light.background,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    marginHorizontal: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  header: {
+    alignItems: 'flex-end',
+    marginBottom: 8,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
   },
   value: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
     color: Colors.light.text,
     marginBottom: 4,
   },
   title: {
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.light.tabIconDefault,
-    textAlign: 'center',
     fontWeight: '500',
   },
 });

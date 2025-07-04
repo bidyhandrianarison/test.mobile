@@ -6,6 +6,7 @@ import FormInput from '../components/FormInput';
 import Colors from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import ImagePickerField from '../components/ImagePickerField';
+import { Product } from '../types/Product';
 
 const CATEGORIES = [
   'Informatique', 'Sport', 'Beauté', 'Maison', 'Vêtements', 'Électronique', 'Jouets', 'Livres'
@@ -61,7 +62,7 @@ const AddProductScreen = () => {
         image: form.image,
         isActive: true,
       });
-      await fetchProducts();
+      
       Alert.alert('Succès', 'Produit ajouté avec succès', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);

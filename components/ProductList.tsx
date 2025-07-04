@@ -1,7 +1,7 @@
 import React from 'react';
 import { FlatList, View, StyleSheet } from 'react-native';
 import ProductItem from './ProductItem';
-import { Product } from '@/contexts/ProductContext';
+import { Product } from '../types/Product';
 import EmptyState from './EmptyState';
 
 interface ProductListProps {

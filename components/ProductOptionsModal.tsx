@@ -8,21 +8,7 @@ import { useProducts } from '../contexts/ProductContext';
 import { useAuth } from '../contexts/AuthContext';
 import Colors from '../constants/Colors';
 import type { RootStackParamList } from '../types/navigation';
-
-// Import correct du type Product
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  category: string;
-  vendeurs: string;
-  image: string;
-  isActive: boolean;
-  createdBy?: string;
-  createdAt?: string;
-}
+import { Product } from '../types/Product'; // Import centralisé
 
 interface ProductOptionsModalProps {
   visible: boolean;
@@ -49,7 +35,7 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
   const { user } = useAuth();
 
   // Vérifie si l'utilisateur peut modifier/supprimer ce produit
-  const canModify = product.createdBy === user?.email;
+  const canModify = product.createdBy === user?.email || product.userId === user?.id;
 
   // Navigation vers les détails du produit
   const handleViewDetails = () => {

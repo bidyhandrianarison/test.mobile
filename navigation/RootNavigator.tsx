@@ -2,16 +2,12 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, ActivityIndicator, Text, Pressable, Platform, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import { View, ActivityIndicator, Text, Platform, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../contexts/AuthContext';
 import Colors from '../constants/Colors';
-import type { 
-  RootStackParamList, 
-  TabParamList, 
-  AuthStackParamList 
-} from '../types/navigation';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -23,93 +19,12 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import ProductEditScreen from '../screens/ProductEditScreen';
 
+// Types
+import type { RootStackParamList, AuthStackParamList, TabStackParamList } from '../types/navigation';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<TabParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-
-// Composant pour un élément de la tab bar
-interface TabBarItemProps {
-  label: string;
-  iconName: string;
-  isActive: boolean;
-  onPress: () => void;
-}
-
-const TabBarItem: React.FC<TabBarItemProps> = ({ label, iconName, isActive, onPress }) => {
-  return (
-    <TouchableOpacity 
-      style={styles.tabBarItem} 
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Ionicons 
-        name={iconName as any} 
-        size={24} 
-        color={isActive ? Colors.light.tint : Colors.light.tabIconDefault} 
-      />
-      <Text style={[
-        styles.tabBarLabel, 
-        { color: isActive ? Colors.light.tint : Colors.light.tabIconDefault }
-      ]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
-
-// Custom Tab Bar Component
-const CustomTabBar = ({ state, descriptors, navigation }: any) => {
-  const { routes, index: activeIndex } = state;
-
-  return (
-    <View style={styles.tabBar}>
-      {/* Onglet Home */}
-      <TabBarItem
-        label="Accueil"
-        iconName="home"
-        isActive={activeIndex === 0}
-        onPress={() => navigation.navigate('Home')}
-      />
-      
-      {/* Onglet Profile */}
-      <TabBarItem
-        label="Profil"
-        iconName="person"
-        isActive={activeIndex === 1}
-        onPress={() => navigation.navigate('Profile')}
-      />
-    </View>
-  );
-};
-
-// Navigation des onglets principaux
-const TabNavigator = () => {
-  return (
-    <Tab.Navigator
-      tabBar={props => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: { display: 'none' }, // On masque la tabBar native
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          title: 'Accueil',
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: 'Profil',
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
+const Tab = createBottomTabNavigator<TabStackParamList>();
 
 // Navigation d'authentification
 const AuthNavigator = () => {
@@ -121,13 +36,84 @@ const AuthNavigator = () => {
   );
 };
 
-// Navigation principale avec toutes les pages
+// ✅ CORRECTION : Tab bar avec hauteur corrigée et icônes fonctionnelles
+const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  
+  // ✅ CALCUL CORRECT : Hauteur optimisée pour la tab bar
+  const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
+  const paddingBottom = Platform.OS === 'ios' ? 34 : 16;
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: Colors.light.tint,
+        tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarStyle: {
+          backgroundColor: Colors.light.background,
+          borderTopWidth: 1,
+          borderTopColor: '#E1E1E1',
+          paddingBottom: Math.max(insets.bottom, paddingBottom),
+          paddingTop: 10,
+          height: tabBarHeight + Math.max(insets.bottom, 0),
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 10,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginBottom: Platform.OS === 'ios' ? 4 : 2,
+        },
+        // ✅ SUPPRESSION : tabBarIconStyle qui causait des problèmes d'affichage
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          title: 'Accueil',
+          tabBarIcon: ({ color, size, focused }) => (
+            // ✅ SIMPLIFICATION : Icône directe sans container supplémentaire
+            <Ionicons 
+              name={focused ? "home" : "home-outline"} 
+              size={24} // ✅ TAILLE FIXE pour éviter les problèmes
+              color={color} 
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profil',
+          tabBarIcon: ({ color, size, focused }) => (
+            // ✅ SIMPLIFICATION : Icône directe sans container supplémentaire
+            <Ionicons 
+              name={focused ? "person" : "person-outline"} 
+              size={24} // ✅ TAILLE FIXE pour éviter les problèmes
+              color={color} 
+            />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+// ✅ CORRECTION : Navigation principale sans padding bottom excessif
 const MainNavigator = () => {
   return (
     <Stack.Navigator>
       <Stack.Screen 
         name="MainTabs" 
-        component={TabNavigator} 
+        component={TabNavigator}
         options={{ headerShown: false }}
       />
       <Stack.Screen 
@@ -137,7 +123,8 @@ const MainNavigator = () => {
           title: 'Ajouter un produit',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' }
+          headerTitleStyle: { fontWeight: 'bold' },
+          presentation: 'modal',
         }}
       />
       <Stack.Screen 
@@ -147,7 +134,8 @@ const MainNavigator = () => {
           title: 'Modifier le profil',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold' }
+          headerTitleStyle: { fontWeight: 'bold' },
+          presentation: 'modal',
         }}
       />
       <Stack.Screen 
@@ -176,7 +164,13 @@ const MainNavigator = () => {
 
 // Navigateur racine avec gestion de l'authentification
 const RootNavigator = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  console.log('RootNavigator - État actuel:', { 
+    isAuthenticated, 
+    isLoading, 
+    userEmail: user?.email 
+  });
 
   if (isLoading) {
     return (
@@ -189,13 +183,16 @@ const RootNavigator = () => {
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
+      {isAuthenticated ? (
+        <MainNavigator />
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  // Loading styles
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -206,41 +203,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: Colors.light.text,
-  },
-  
-  // Tab Bar styles
-  tabBar: {
-    flexDirection: 'row',
-    height: 80,
-    backgroundColor: Colors.light.background,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 8,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 10,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 24,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-    paddingTop: 10,
-  },
-  tabBarItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingVertical: 8,
-  },
-  tabBarLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 4,
   },
 });
 
