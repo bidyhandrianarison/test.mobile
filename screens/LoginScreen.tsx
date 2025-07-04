@@ -1,20 +1,19 @@
 import { View, Text, SafeAreaView, StyleSheet } from 'react-native'
 import React, { useState } from 'react'
 import { Button } from 'react-native-elements'
-import FormInput from '@/components/FormInput'
-import { useRouter } from 'expo-router'
-import { validateEmail, validatePassword } from '@/utils/validation'
-import { loginUser } from '@/services/authService'
+import FormInput from '../components/FormInput'
+import { validateEmail, validatePassword } from '../utils/validation'
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
-const Login = () => {
-    const router = useRouter();
+const LoginScreen = () => {
+    const navigation = useNavigation();
+    const { login } = useAuth();
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [emailError, setEmailError] = useState<string | null>(null)
     const [passwordError, setPasswordError] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
-    const ToSignup = () => router.push('/(auth)/signup');
-
     const handleEmailChange = (text: string) => {
         setEmail(text)
         if (text.length === 0 || validateEmail(text)) {
@@ -39,21 +38,18 @@ const Login = () => {
         }
     }
 
-    const handlePasswordBlur = () => {
-        if (!validatePassword(password)) {
-            setPasswordError("Le mot de passe doit contenir au moins 6 caractères")
-        }
-    }
+    const ToSignup = () => navigation.navigate('Signup' as never);
 
     const handleLogin = async () => {
         setIsLoading(true);
         setEmailError(null);
         setPasswordError(null);
         try {
-            await loginUser(email, password);
-            router.push('/(tabs)'); 
+            const success = await login(email, password);
+            if (success) {
+                // La navigation sera gérée automatiquement par le RootNavigator
+            }
         } catch (error: any) {
-            // Affiche l'erreur
             if (error.message.includes('mot de passe')) {
                 setPasswordError(error.message);
             } else {
@@ -75,7 +71,6 @@ const Login = () => {
                         isPassword={false}
                         labelValue={email}
                         label='Email'
-                        // @ts-ignore
                         onBlur={handleEmailBlur}
                     />
                     {emailError && <Text style={{ color: 'red', alignSelf: 'flex-start' }}>{emailError}</Text>}
@@ -85,12 +80,11 @@ const Login = () => {
                         isPassword={true}
                         labelValue={password}
                         label='Mot de passe'
-                        // @ts-ignore
-                        onBlur={handlePasswordBlur}
+                        onBlur={handleEmailBlur}
                     />
                     {passwordError && <Text style={{ color: 'red', alignSelf: 'flex-start' }}>{passwordError}</Text>}
 
-                    <Button title={"Se connecter"} onPress={handleLogin} />
+                    <Button title={"Se connecter"} onPress={handleLogin} loading={isLoading} />
                 </View>
 
                 <View>
@@ -122,14 +116,14 @@ const styles = StyleSheet.create({
     },
     title: {
         fontWeight: "bold",
-        fontSize: 24
+        fontSize: 24,
+        marginBottom: 20
     },
     outlineButton: {
         backgroundColor: 'white',
         color: 'black',
         width: '90%'
-
-
     }
 })
-export default Login
+
+export default LoginScreen

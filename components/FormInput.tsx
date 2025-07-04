@@ -48,8 +48,8 @@ const styles=StyleSheet.create({
         shadowOpacity: 0.07,
         shadowRadius: 6,
         elevation: 2,
-    },
-    input: {
+},
+input: {
         color: Colors.light.text,
         fontSize: 16,
         flex: 1,

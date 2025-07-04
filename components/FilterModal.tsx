@@ -1,8 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
-  Modal,
-  Animated,
-  Dimensions,
   View,
   Text as RNText,
   TouchableOpacity,
@@ -10,6 +7,7 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
+import Modal from 'react-native-modal';
 import Colors from '../constants/Colors';
 
 export type FiltersState = {
@@ -34,55 +32,28 @@ interface FilterModalProps {
 const FilterModal: React.FC<FilterModalProps> = ({
   visible, onClose, filters, setFilters, categories, sellers, onApply, onReset
 }) => {
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const screenHeight = Dimensions.get('window').height;
-  const modalHeight = Math.round(screenHeight * 0.55);
-
-  useEffect(() => {
-    if (visible) {
-      Animated.timing(slideAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible]);
-
   return (
     <Modal
-      visible={visible}
-      animationType="none"
-      transparent
-      onRequestClose={onClose}
+      isVisible={visible}
+      onSwipeComplete={onClose}
+      swipeDirection="down"
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      propagateSwipe
+      onBackdropPress={onClose}
+      onBackButtonPress={onClose}
+      style={styles.modal}
+      backdropOpacity={0.4}
+      backdropTransitionOutTiming={0}
     >
-      <Animated.View
-        pointerEvents={visible ? 'auto' : 'none'}
-        style={[styles.overlay, { opacity: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.4] }) }]}
-      />
-      <Animated.View
-        style={[
-          styles.modalContainer,
-          {
-            height: modalHeight,
-            transform: [{
-              translateY: slideAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [modalHeight + 40, 0],
-              })
-            }],
-            backgroundColor: Colors.light.background,
-          },
-        ]}
-      >
+      <View style={styles.modalContainer}>
         <View style={styles.handleBar} />
-        <ScrollView contentContainerStyle={styles.modalContent}>
+        <ScrollView 
+          contentContainerStyle={styles.modalContent}
+          showsVerticalScrollIndicator={false}
+        >
           <RNText style={styles.modalTitle}>Filtres</RNText>
+          
           {/* Catégorie */}
           <RNText style={styles.sectionTitle}>Catégorie</RNText>
           <View style={styles.chipRow}>
@@ -96,19 +67,21 @@ const FilterModal: React.FC<FilterModalProps> = ({
               </TouchableOpacity>
             ))}
           </View>
+          
           {/* Vendeur */}
           <RNText style={styles.sectionTitle}>Vendeur</RNText>
           <View style={styles.chipRow}>
-            {sellers.map((v) => (
+            {sellers.map((seller) => (
               <TouchableOpacity
-                key={v}
-                style={[styles.chip, filters.seller === v && styles.chipSelected]}
-                onPress={() => setFilters(f => ({ ...f, seller: f.seller === v ? null : v }))}
+                key={seller}
+                style={[styles.chip, filters.seller === seller && styles.chipSelected]}
+                onPress={() => setFilters(f => ({ ...f, seller: f.seller === seller ? null : seller }))}
               >
-                <RNText style={[styles.chipText, filters.seller === v && styles.chipTextSelected]}>{v}</RNText>
+                <RNText style={[styles.chipText, filters.seller === seller && styles.chipTextSelected]}>{seller}</RNText>
               </TouchableOpacity>
             ))}
           </View>
+          
           {/* Prix */}
           <RNText style={styles.sectionTitle}>Prix</RNText>
           <View style={styles.priceRow}>
@@ -120,7 +93,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               keyboardType="numeric"
               placeholderTextColor={Colors.light.tabIconDefault}
             />
-            <RNText style={{ marginHorizontal: 8, fontSize: 16, color: Colors.light.text }}>-</RNText>
+            <RNText style={styles.priceSeparator}>-</RNText>
             <TextInput
               style={styles.priceInput}
               value={filters.maxPrice}
@@ -130,6 +103,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               placeholderTextColor={Colors.light.tabIconDefault}
             />
           </View>
+          
           {/* Actif uniquement */}
           <View style={styles.switchRow}>
             <RNText style={styles.sectionTitle}>Actifs uniquement</RNText>
@@ -140,6 +114,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               <View style={[styles.switchCircle, filters.activeOnly && styles.switchCircleActive]} />
             </TouchableOpacity>
           </View>
+          
           {/* Actions */}
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.resetBtn} onPress={onReset}>
@@ -150,31 +125,26 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </Animated.View>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000',
-    zIndex: 99,
+  modal: {
+    justifyContent: 'flex-end',
+    margin: 0,
   },
   modalContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     backgroundColor: Colors.light.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    maxHeight: '70%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 10,
-    zIndex: 100,
   },
   handleBar: {
     width: 48,
@@ -182,7 +152,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: Colors.light.tabIconDefault,
     alignSelf: 'center',
-    marginVertical: 10,
+    marginVertical: 12,
+    opacity: 0.6,
   },
   modalContent: {
     paddingHorizontal: 24,
@@ -196,13 +167,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.light.text,
-    marginBottom: 6,
-    marginTop: 10,
-  },
-  label: {
     fontSize: 15,
     fontWeight: '600',
     color: Colors.light.text,
@@ -249,6 +213,11 @@ const styles = StyleSheet.create({
     width: 80,
     color: Colors.light.text,
   },
+  priceSeparator: {
+    marginHorizontal: 8,
+    fontSize: 16,
+    color: Colors.light.text,
+  },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -285,7 +254,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   resetBtn: {
-    backgroundColor: Colors.light.tabIconDefault,
+    backgroundColor: '#e3eafc',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 18,

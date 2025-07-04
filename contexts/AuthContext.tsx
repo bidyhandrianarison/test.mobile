@@ -94,21 +94,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * Met à jour le state si besoin, retourne true/false
    */
   const checkAuth = async (): Promise<boolean> => {
-    try {
-      const userJSON = await AsyncStorage.getItem('user');
-      if (userJSON) {
+      try {
+        const userJSON = await AsyncStorage.getItem('user');
+        if (userJSON) {
         const user = JSON.parse(userJSON);
         dispatch({ type: 'LOGIN', payload: user });
         return true;
-      } else {
+        } else {
         dispatch({ type: 'LOGOUT' });
         return false;
-      }
-    } catch (e) {
+        }
+      } catch (e) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to check auth.' });
       return false;
-    }
-  };
+      }
+    };
 
   /**
    * Objet du contexte d'authentification
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: 'SET_ERROR', payload: null });
       try {
         const user = await loginUser(email, password);
-        const userData = { id: user.id || String(Date.now()), name: user.username || user.name || '', email: user.email };
+        const userData = { id: user.id || String(Date.now()), name: user.name || '', email: user.email };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         dispatch({ type: 'LOGIN', payload: userData });
         return true;
@@ -145,13 +145,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * Inscrit un nouvel utilisateur et le connecte
      */
     signup: async (name, email, password) => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_ERROR', payload: null });
       try {
         await registerUser(email, name, password);
         // Optionnel : login automatique après inscription
         const user = await loginUser(email, password);
-        const userData = { id: user.id || String(Date.now()), name: user.username || user.name || '', email: user.email };
+        const userData = { id: user.id || String(Date.now()), name: user.name || '', email: user.email };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         dispatch({ type: 'LOGIN', payload: userData });
         return true;
@@ -173,15 +173,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * Met à jour le profil utilisateur (persistance et state)
      */
     updateProfile: async (updatedData) => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const currentUser = state.user;
+        dispatch({ type: 'SET_LOADING', payload: true });
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const currentUser = state.user;
       if (!currentUser) return;
       // Persiste la modification dans AsyncStorage via le service
       const updated = await updateUser(currentUser.email, updatedData);
       await AsyncStorage.setItem('user', JSON.stringify(updated));
-      dispatch({ type: 'UPDATE_USER', payload: updatedData });
-      dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'UPDATE_USER', payload: updatedData });
+        dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 

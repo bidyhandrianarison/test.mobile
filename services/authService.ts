@@ -17,14 +17,14 @@ const seedUsers = async () => {
  * Enregistre un nouvel utilisateur dans AsyncStorage
  * @throws si l'email existe déjà
  */
-export const registerUser = async (email: string, username: string, password: string) => {
+export const registerUser = async (email: string, name: string, password: string) => {
   await seedUsers();
   const usersJson = await AsyncStorage.getItem(USERS_KEY);
   const users = usersJson ? JSON.parse(usersJson) : [];
   if (users.find((u: any) => u.email === email)) {
     throw new Error('Cet email existe déjà');
   }
-  users.push({ email, username, password });
+  users.push({ email, name, password });
   await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
 

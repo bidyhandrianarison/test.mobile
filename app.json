@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "food.truck.apk",
-    "slug": "food.truck.apk",
+    "slug": "food-truck-apk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -24,15 +24,8 @@
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "bundler": "metro"
     },
-    "plugins": [
-      "expo-router"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    "plugins": []
   }
 }
