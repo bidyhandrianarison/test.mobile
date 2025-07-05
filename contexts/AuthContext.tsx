@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * Objet du contexte d'authentification
-   */
+   */                                                                                                                                                                                                                                                                                                                                                                 
   const authContext: AuthContextType = {
     ...state,
     /**
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error('AuthContext - Erreur de connexion:', e);
         dispatch({ type: 'SET_ERROR', payload: e.message });
         dispatch({ type: 'SET_LOADING', payload: false });
-        return false;
+        throw e;
       }
     },
     /**

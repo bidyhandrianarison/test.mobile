@@ -8,7 +8,7 @@ import { useProducts } from '../contexts/ProductContext';
 import { useAuth } from '../contexts/AuthContext';
 import Colors from '../constants/Colors';
 import type { RootStackParamList } from '../types/navigation';
-import { Product } from '../types/Product'; // Import centralisé
+import { Product } from '../types/Product';
 
 interface ProductOptionsModalProps {
   visible: boolean;
@@ -49,7 +49,9 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
 
   // Navigation vers l'édition du produit
   const handleEdit = () => {
+    // Fermer le modal en premier pour une meilleure UX
     onClose();
+    
     if (!canModify) {
       Alert.alert(
         'Action non autorisée',
@@ -58,11 +60,20 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
       );
       return;
     }
-    
+    // Navigation directe vers l'écran d'édition (toujours prioritaire)
+    try {
+      navigation.navigate('ProductEdit', { productId: product.id });
+    } catch (error) {
+      console.error('Erreur de navigation vers ProductEdit:', error);
+      Alert.alert(
+        'Erreur de navigation',
+        'Impossible d\'ouvrir l\'écran d\'édition. Vérifiez que l\'écran ProductEdit est bien configuré.',
+        [{ text: 'OK' }]
+      );
+    }
+    // Si une fonction onEdit est fournie, l'appeler en complément
     if (onEdit) {
       onEdit();
-    } else {
-      navigation.navigate('ProductEdit', { productId: product.id });
     }
   };
 
@@ -194,7 +205,9 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
                 { backgroundColor: option.backgroundColor },
                 !canModify && (option.id === 'edit' || option.id === 'delete') && styles.optionButtonDisabled
               ]}
-              onPress={option.onPress}
+              onPress={() => {
+                option.onPress();
+              }}
               activeOpacity={0.7}
               disabled={!canModify && (option.id === 'edit' || option.id === 'delete')}
             >

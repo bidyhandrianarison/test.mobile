@@ -7,7 +7,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  SafeAreaView
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useProducts } from '../contexts/ProductContext';
@@ -61,6 +65,9 @@ const ProductEditScreen = () => {
 
   // Gestion de la soumission
   const handleSubmit = async () => {
+    // ✅ NOUVEAU : Fermer le clavier avant la soumission
+    Keyboard.dismiss();
+    
     const validationErrors = validateProductForm(form);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
@@ -92,6 +99,12 @@ const ProductEditScreen = () => {
     }
   };
 
+  // ✅ NOUVEAU : Gestion de l'annulation avec fermeture du clavier
+  const handleCancel = () => {
+    Keyboard.dismiss();
+    navigation.goBack();
+  };
+
   // Si le produit n'existe pas
   if (!product) {
     return (
@@ -113,151 +126,166 @@ const ProductEditScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView 
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Modifier le produit</Text>
-          <Text style={styles.subtitle}>Modifiez les informations de votre produit</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          {/* Nom du produit */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Nom du produit *</Text>
-            <TextInput
-              style={[styles.input, errors.name && styles.inputError]}
-              value={form.name}
-              onChangeText={(text) => setForm((f) => ({ ...f, name: text }))}
-              placeholder="Nom du produit"
-              placeholderTextColor={Colors.light.tabIconDefault}
-            />
-            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-          </View>
-
-          {/* Description */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Description *</Text>
-            <TextInput
-              style={[styles.input, styles.textArea, errors.description && styles.inputError]}
-              value={form.description}
-              onChangeText={(text) => setForm((f) => ({ ...f, description: text }))}
-              placeholder="Description du produit"
-              placeholderTextColor={Colors.light.tabIconDefault}
-              multiline
-              numberOfLines={4}
-            />
-            {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
-          </View>
-
-          {/* Prix et Stock */}
-          <View style={styles.formRow}>
-            <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-              <Text style={styles.label}>Prix (€) *</Text>
-              <TextInput
-                style={[styles.input, errors.price && styles.inputError]}
-                value={form.price}
-                onChangeText={(text) => setForm((f) => ({ ...f, price: text }))}
-                placeholder="0.00"
-                placeholderTextColor={Colors.light.tabIconDefault}
-                keyboardType="decimal-pad"
-              />
-              {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
+            <View style={styles.header}>
+              <Text style={styles.title}>Modifier le produit</Text>
+              <Text style={styles.subtitle}>Modifiez les informations de votre produit</Text>
             </View>
 
-            <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-              <Text style={styles.label}>Stock *</Text>
-              <TextInput
-                style={[styles.input, errors.stock && styles.inputError]}
-                value={form.stock}
-                onChangeText={(text) => setForm((f) => ({ ...f, stock: text }))}
-                placeholder="0"
-                placeholderTextColor={Colors.light.tabIconDefault}
-                keyboardType="number-pad"
-              />
-              {errors.stock && <Text style={styles.errorText}>{errors.stock}</Text>}
+            <View style={styles.formContainer}>
+              {/* Nom du produit */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Nom du produit *</Text>
+                <TextInput
+                  style={[styles.input, errors.name && styles.inputError]}
+                  value={form.name}
+                  onChangeText={(text) => setForm((f) => ({ ...f, name: text }))}
+                  placeholder="Nom du produit"
+                  placeholderTextColor={Colors.light.tabIconDefault}
+                />
+                {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+              </View>
+
+              {/* Description */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Description *</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea, errors.description && styles.inputError]}
+                  value={form.description}
+                  onChangeText={(text) => setForm((f) => ({ ...f, description: text }))}
+                  placeholder="Description du produit"
+                  placeholderTextColor={Colors.light.tabIconDefault}
+                  multiline
+                  numberOfLines={4}
+                />
+                {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+              </View>
+
+              {/* Prix et Stock */}
+              <View style={styles.formRow}>
+                <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
+                  <Text style={styles.label}>Prix (€) *</Text>
+                  <TextInput
+                    style={[styles.input, errors.price && styles.inputError]}
+                    value={form.price}
+                    onChangeText={(text) => setForm((f) => ({ ...f, price: text }))}
+                    placeholder="0.00"
+                    placeholderTextColor={Colors.light.tabIconDefault}
+                    keyboardType="decimal-pad"
+                  />
+                  {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+                </View>
+
+                <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
+                  <Text style={styles.label}>Stock *</Text>
+                  <TextInput
+                    style={[styles.input, errors.stock && styles.inputError]}
+                    value={form.stock}
+                    onChangeText={(text) => setForm((f) => ({ ...f, stock: text }))}
+                    placeholder="0"
+                    placeholderTextColor={Colors.light.tabIconDefault}
+                    keyboardType="number-pad"
+                  />
+                  {errors.stock && <Text style={styles.errorText}>{errors.stock}</Text>}
+                </View>
+              </View>
+
+              {/* Catégorie */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Catégorie *</Text>
+                <TextInput
+                  style={[styles.input, errors.category && styles.inputError]}
+                  value={form.category}
+                  onChangeText={(text) => setForm((f) => ({ ...f, category: text }))}
+                  placeholder="Catégorie du produit"
+                  placeholderTextColor={Colors.light.tabIconDefault}
+                />
+                {errors.category && <Text style={styles.errorText}>{errors.category}</Text>}
+              </View>
+
+              {/* Vendeur */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Vendeur *</Text>
+                <TextInput
+                  style={[styles.input, errors.vendeurs && styles.inputError]}
+                  value={form.vendeurs}
+                  onChangeText={(text) => setForm((f) => ({ ...f, vendeurs: text }))}
+                  placeholder="Nom du vendeur"
+                  placeholderTextColor={Colors.light.tabIconDefault}
+                />
+                {errors.vendeurs && <Text style={styles.errorText}>{errors.vendeurs}</Text>}
+              </View>
+
+              {/* Image */}
+              <View style={styles.formGroup}>
+                <ImagePickerField
+                  value={form.image}
+                  onChange={(uri) => setForm((f) => ({ ...f, image: uri }))}
+                  label="Image du produit"
+                  required
+                />
+                {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
+              </View>
+
+              {/* Switch Actif/Inactif */}
+              <View style={styles.formGroup}>
+                <View style={styles.switchRow}>
+                  <Text style={styles.label}>Statut du produit</Text>
+                  <TouchableOpacity
+                    style={[styles.switch, form.isActive && styles.switchActive]}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setForm((f) => ({ ...f, isActive: !f.isActive }));
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.switchCircle, form.isActive && styles.switchCircleActive]} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.switchLabel}>
+                  {form.isActive ? 'Produit actif' : 'Produit inactif'}
+                </Text>
+              </View>
+
+              {/* ✅ NOUVEAU : Boutons d'action dans un container fixe */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={handleCancel}
+                  activeOpacity={0.7}
+                  disabled={loading}
+                >
+                  <Feather name="x" size={20} color={Colors.light.tabIconDefault} />
+                  <Text style={styles.cancelBtnText}>Annuler</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.saveBtn}
+                  onPress={handleSubmit}
+                  disabled={loading}
+                  activeOpacity={0.85}
+                >
+                  <Feather name="save" size={20} color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={styles.saveBtnText}>
+                    {loading ? 'Enregistrement...' : 'Enregistrer'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-
-          {/* Catégorie */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Catégorie *</Text>
-            <TextInput
-              style={[styles.input, errors.category && styles.inputError]}
-              value={form.category}
-              onChangeText={(text) => setForm((f) => ({ ...f, category: text }))}
-              placeholder="Catégorie du produit"
-              placeholderTextColor={Colors.light.tabIconDefault}
-            />
-            {errors.category && <Text style={styles.errorText}>{errors.category}</Text>}
-          </View>
-
-          {/* Vendeur */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Vendeur *</Text>
-            <TextInput
-              style={[styles.input, errors.vendeurs && styles.inputError]}
-              value={form.vendeurs}
-              onChangeText={(text) => setForm((f) => ({ ...f, vendeurs: text }))}
-              placeholder="Nom du vendeur"
-              placeholderTextColor={Colors.light.tabIconDefault}
-            />
-            {errors.vendeurs && <Text style={styles.errorText}>{errors.vendeurs}</Text>}
-          </View>
-
-          {/* Image */}
-          <View style={styles.formGroup}>
-            <ImagePickerField
-              value={form.image}
-              onChange={(uri) => setForm((f) => ({ ...f, image: uri }))}
-              label="Image du produit"
-              required
-            />
-            {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
-          </View>
-
-          {/* Switch Actif/Inactif */}
-          <View style={styles.formGroup}>
-            <View style={styles.switchRow}>
-              <Text style={styles.label}>Statut du produit</Text>
-              <TouchableOpacity
-                style={[styles.switch, form.isActive && styles.switchActive]}
-                onPress={() => setForm((f) => ({ ...f, isActive: !f.isActive }))}
-              >
-                <View style={[styles.switchCircle, form.isActive && styles.switchCircleActive]} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.switchLabel}>
-              {form.isActive ? 'Produit actif' : 'Produit inactif'}
-            </Text>
-          </View>
-
-          {/* Boutons d'action */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
-            >
-              <Feather name="x" size={20} color={Colors.light.tabIconDefault} />
-              <Text style={styles.cancelBtnText}>Annuler</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.saveBtn}
-              onPress={handleSubmit}
-              disabled={loading}
-              activeOpacity={0.85}
-            >
-              <Feather name="save" size={20} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.saveBtnText}>
-                {loading ? 'Enregistrement...' : 'Enregistrer'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -267,9 +295,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9ff',
   },
+  // ✅ NOUVEAU : Container pour KeyboardAvoidingView
+  keyboardContainer: {
+    flex: 1,
+  },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 40,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 30,
   },
   header: {
     alignItems: 'center',
@@ -371,6 +403,7 @@ const styles = StyleSheet.create({
     color: Colors.light.tabIconDefault,
     fontStyle: 'italic',
   },
+  // ✅ NOUVEAU : Container pour les boutons
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -386,6 +419,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#e3eafc',
     gap: 8,
   },
   cancelBtnText: {

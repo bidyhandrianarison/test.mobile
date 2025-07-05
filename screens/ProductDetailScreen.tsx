@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Alert, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useProducts } from '../contexts/ProductContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -132,21 +132,30 @@ const ProductDetailScreenPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ProductDetailScreen
-        product={product}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-      
-      {/* Indicateur de permissions si l'utilisateur n'est pas propriétaire */}
-      {!canModify && product.createdBy && (
-        <View style={styles.permissionIndicator}>
-          <Feather name="info" size={16} color={Colors.light.tabIconDefault} />
-          <Text style={styles.permissionText}>
-            Seul le créateur peut modifier ce produit
-          </Text>
-        </View>
-      )}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={{
+          paddingBottom: 32,
+          ...styles.scrollContent,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <ProductDetailScreen
+          product={product}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+        
+        {/* Indicateur de permissions si l'utilisateur n'est pas propriétaire */}
+        {!canModify && product.createdBy && (
+          <View style={styles.permissionIndicator}>
+            <Feather name="info" size={16} color={Colors.light.tabIconDefault} />
+            <Text style={styles.permissionText}>
+              Seul le créateur peut modifier ce produit
+            </Text>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -229,6 +238,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.tabIconDefault,
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
   },
 });
 

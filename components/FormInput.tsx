@@ -18,7 +18,7 @@ const FormInput = ({labelValue,label,icon,handleChange,isPassword=false, inputSt
     return (
         <View style={styles.inputWrapper}>
             {icon && <Octicons name={icon as keyof typeof Octicons.glyphMap} size={20} color={theme.tint} style={{marginRight: 6}} />}
-            <TextInput placeholder={label} style={[styles.input, inputStyle]}
+            <TextInput placeholder={rest.placeholder || label} style={[styles.input, inputStyle]}
                 value={labelValue}
                 onChangeText={handleChange}
                 secureTextEntry={isPassword}

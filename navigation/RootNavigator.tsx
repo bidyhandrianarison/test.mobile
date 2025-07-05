@@ -2,9 +2,10 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, ActivityIndicator, Text, Platform, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, Text, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 
 import { useAuth } from '../contexts/AuthContext';
 import Colors from '../constants/Colors';
@@ -36,76 +37,117 @@ const AuthNavigator = () => {
   );
 };
 
-// ✅ CORRECTION : Tab bar avec hauteur corrigée et icônes fonctionnelles
-const TabNavigator = () => {
+// Custom Tab Bar avec découpe centrale et FAB
+function CustomTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
-  
-  // ✅ CALCUL CORRECT : Hauteur optimisée pour la tab bar
   const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
-  const paddingBottom = Platform.OS === 'ios' ? 34 : 16;
+  const fabSize = 64;
+  const fabRadius = fabSize / 2;
+  const notchRadius = fabRadius + 8;
+  const tabWidth = 393 / 2;
+  const totalTabBarHeight = tabBarHeight + insets.bottom;
 
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: Colors.light.tint,
-        tabBarInactiveTintColor: Colors.light.tabIconDefault,
-        tabBarStyle: {
-          backgroundColor: Colors.light.background,
-          borderTopWidth: 1,
-          borderTopColor: '#E1E1E1',
-          paddingBottom: Math.max(insets.bottom, paddingBottom),
-          paddingTop: 10,
-          height: tabBarHeight + Math.max(insets.bottom, 0),
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+    <View style={{ 
+      position: 'absolute', 
+      left: 0, 
+      right: 0, 
+      bottom: insets.bottom, 
+      height: totalTabBarHeight, 
+      backgroundColor: 'transparent', 
+      // ✅ MODIFIÉ : Z-index encore plus réduit pour que les modals passent au-dessus
+      zIndex: 10 // Réduit de 50 à 10
+    }}>
+      {/* Fond de la tab bar avec découpe centrale */}
+      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: totalTabBarHeight }}>
+        <Svg width="100%" height={totalTabBarHeight} viewBox={`0 0 393 ${totalTabBarHeight}`} style={{ position: 'absolute', bottom: 0 }}>
+          <Path
+            d={`M0,0
+                H${tabWidth - notchRadius}
+                C${tabWidth - notchRadius + 10},0 ${tabWidth - fabRadius},${notchRadius * 1.1} ${tabWidth},${notchRadius + 2}
+                C${tabWidth + fabRadius},${notchRadius * 1.1} ${tabWidth + notchRadius - 10},0 ${tabWidth + notchRadius},0
+                H393
+                V${totalTabBarHeight}
+                H0
+                Z`}
+            fill={Colors.light.background}
+            stroke="#E1E1E1"
+            strokeWidth={1}
+          />
+        </Svg>
+      </View>
+
+      {/* FAB centré */}
+      <TouchableOpacity
+        style={{
+          position: 'absolute',
+          left: '50%',
+          transform: [{ translateX: -fabRadius }],
+          bottom: totalTabBarHeight - fabRadius + 6,
+          width: fabSize,
+          height: fabSize,
+          borderRadius: fabRadius,
+          backgroundColor: Colors.light.tint,
+          justifyContent: 'center',
+          alignItems: 'center',
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
           shadowRadius: 8,
-          elevation: 10,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          marginBottom: Platform.OS === 'ios' ? 4 : 2,
-        },
-        // ✅ SUPPRESSION : tabBarIconStyle qui causait des problèmes d'affichage
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          title: 'Accueil',
-          tabBarIcon: ({ color, size, focused }) => (
-            // ✅ SIMPLIFICATION : Icône directe sans container supplémentaire
-            <Ionicons 
-              name={focused ? "home" : "home-outline"} 
-              size={24} // ✅ TAILLE FIXE pour éviter les problèmes
-              color={color} 
-            />
-          ),
+          elevation: 8,
+          // ✅ MODIFIÉ : Z-index réduit pour le FAB aussi
+          zIndex: 11, // Réduit de 51 à 11
         }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, size, focused }) => (
-            // ✅ SIMPLIFICATION : Icône directe sans container supplémentaire
-            <Ionicons 
-              name={focused ? "person" : "person-outline"} 
-              size={24} // ✅ TAILLE FIXE pour éviter les problèmes
-              color={color} 
-            />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+        onPress={() => navigation.navigate('AddProduct')}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={32} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Tabs à gauche et à droite du FAB */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: totalTabBarHeight, paddingHorizontal: 32 }}>
+        {state.routes.map((route, index) => {
+          if (route.name === 'AddProduct') return null; // FAB gère ce bouton
+          const { options } = descriptors[route.key];
+          const label =
+            options.tabBarLabel !== undefined
+              ? options.tabBarLabel
+              : options.title !== undefined
+              ? options.title
+              : route.name;
+          const isFocused = state.index === index;
+          const iconName = route.name === 'Home'
+            ? (isFocused ? 'home' : 'home-outline')
+            : (isFocused ? 'person' : 'person-outline');
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={() => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                if (!isFocused && !event.defaultPrevented) {
+                  navigation.navigate(route.name);
+                }
+              }}
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 10 }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name={iconName} size={24} color={isFocused ? Colors.light.tint : Colors.light.tabIconDefault} />
+              <Text style={{ color: isFocused ? Colors.light.tint : Colors.light.tabIconDefault, fontSize: 12, fontWeight: '600', marginTop: 2 }}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
   );
-};
+}
 
 // ✅ CORRECTION : Navigation principale sans padding bottom excessif
 const MainNavigator = () => {
@@ -191,6 +233,25 @@ const RootNavigator = () => {
     </NavigationContainer>
   );
 };
+
+const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
+  return (
+    <Tab.Navigator
+      tabBar={props => <CustomTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: Colors.light.tint,
+        tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarStyle: { display: 'none' }, // On masque la tabBar native
+      }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+    </Tab.Navigator>
+  );
+}
 
 const styles = StyleSheet.create({
   loadingContainer: {

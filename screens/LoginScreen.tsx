@@ -2,6 +2,8 @@ import { View, Text, SafeAreaView, StyleSheet, KeyboardAvoidingView, Platform, T
 import React, { useState, useEffect } from 'react';
 import { Button } from 'react-native-elements';
 import FormInput from '../components/FormInput';
+import ErrorMessage from '../components/ErrorMessage';
+import FormFieldError from '../components/FormFieldError';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +22,9 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
+  
+  // ✅ NOUVEAU : État pour l'erreur globale de connexion
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
   // ✅ CORRECTION : Redirection automatique si déjà connecté
   useEffect(() => {
@@ -30,6 +35,7 @@ const LoginScreen = () => {
 
   const handleEmailChange = (text: string) => {
     setEmail(text);
+    setGlobalError(null); // ✅ Effacer l'erreur globale lors de la saisie
     if (text.length === 0 || validateEmail(text)) {
       setEmailError(null);
     } else {
@@ -39,6 +45,7 @@ const LoginScreen = () => {
 
   const handlePasswordChange = (text: string) => {
     setPassword(text);
+    setGlobalError(null); // ✅ Effacer l'erreur globale lors de la saisie
     if (text.length === 0 || validatePassword(text)) {
       setPasswordError(null);
     } else {
@@ -50,6 +57,11 @@ const LoginScreen = () => {
     if (!validateEmail(email)) {
       setEmailError('Email invalide');
     }
+  };
+
+  // ✅ NOUVEAU : Fonction pour effacer l'erreur globale
+  const handleDismissGlobalError = () => {
+    setGlobalError(null);
   };
 
   // ✅ CORRECTION : Navigation typée
@@ -79,6 +91,7 @@ const LoginScreen = () => {
     setLoginLoading(true);
     setEmailError(null);
     setPasswordError(null);
+    setGlobalError(null); // ✅ Effacer l'erreur globale avant tentative
     
     try {
       console.log('Tentative de connexion...', { email });
@@ -90,16 +103,23 @@ const LoginScreen = () => {
         // Le RootNavigator détectera automatiquement isAuthenticated = true
         // et redirigera vers MainTabs
       } else {
-        setEmailError('Échec de la connexion');
+        // ✅ NOUVEAU : Erreur globale au lieu d'erreur de champ
+        setGlobalError('Échec de la connexion. Vérifiez vos identifiants.');
       }
     } catch (error: any) {
       console.error('Erreur de connexion:', error);
+      
+      // ✅ AMÉLIORÉ : Gestion plus fine des erreurs
       if (error.message.includes('mot de passe') || error.message.includes('password')) {
         setPasswordError(error.message);
       } else if (error.message.includes('email') || error.message.includes('Email')) {
         setEmailError(error.message);
       } else {
-        setEmailError('Erreur de connexion. Vérifiez vos identifiants.');
+        // ✅ NOUVEAU : Erreur globale pour les erreurs de connexion générales
+        setGlobalError(
+          error.message || 
+          'Erreur de connexion. Vérifiez votre connexion internet et réessayez.'
+        );
       }
     } finally {
       setLoginLoading(false);
@@ -126,6 +146,13 @@ const LoginScreen = () => {
         <View style={styles.header}>
           <Text style={styles.title}>Connexion</Text>
           <Text style={styles.subtitle}>Connectez-vous à votre compte pour gérer vos produits</Text>
+          
+          {/* ✅ NOUVEAU : Message d'erreur globale */}
+          <ErrorMessage
+            message={globalError}
+            onDismiss={handleDismissGlobalError}
+            style={styles.globalError}
+          />
         </View>
 
         <View style={styles.form}>
@@ -137,7 +164,7 @@ const LoginScreen = () => {
             label="Email"
             onBlur={handleEmailBlur}
           />
-          {emailError && <Text style={styles.error}>{emailError}</Text>}
+          <FormFieldError error={emailError} />
 
           <FormInput
             icon="shield-lock"
@@ -147,7 +174,7 @@ const LoginScreen = () => {
             label="Mot de passe"
             onBlur={() => {}}
           />
-          {passwordError && <Text style={styles.error}>{passwordError}</Text>}
+          <FormFieldError error={passwordError} />
 
           <Button
             title="Se connecter"
@@ -172,7 +199,7 @@ const LoginScreen = () => {
 
 export default LoginScreen;
 
-// Styles inchangés...
+// ✅ STYLES AMÉLIORÉS
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
@@ -191,20 +218,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#2f95dc',
     marginBottom: 4,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  // ✅ NOUVEAU : Style pour l'erreur globale
+  globalError: {
+    marginTop: 16,
+    marginBottom: 8,
   },
   form: {
     gap: 16,
-  },
-  error: {
-    color: 'red',
-    fontSize: 13,
-    marginTop: -12,
-    marginBottom: 8,
-    marginLeft: 4,
   },
   loginButton: {
     backgroundColor: '#2f95dc',

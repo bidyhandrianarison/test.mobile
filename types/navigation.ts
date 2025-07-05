@@ -24,7 +24,7 @@ export type RootStackParamList = {
   AddProduct: undefined;
   EditProfile: undefined;
   ProductDetail: { productId: string };
-  ProductEdit: { productId: string };
+  ProductEdit: { productId: string }; // ✅ Route déjà définie
 };
 
 // Types d'union pour la navigation
