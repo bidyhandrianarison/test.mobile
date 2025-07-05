@@ -37,9 +37,23 @@ const HomeScreen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 8;
 
-  // ✅ CALCUL CORRECT : Hauteur de la tab bar pour le positionnement
-  const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
-  const safeTabBarHeight = tabBarHeight + Math.max(insets.bottom, 0);
+  // ✅ CALCUL PRÉCIS : Position du FAB en tenant compte de la TabBar et SafeArea
+  const fabBottomPosition = useMemo(() => {
+    // Hauteur de base de la TabBar selon la plateforme
+    const baseTabBarHeight = Platform.OS === 'ios' ? 84 : 70;
+    // Ajout de la safe area pour les appareils avec encoche/barre de geste
+    const totalTabBarHeight = baseTabBarHeight + Math.max(insets.bottom, 0);
+    
+    // Position le FAB à 10px au-dessus de la TabBar
+    return totalTabBarHeight + 10;
+  }, [insets.bottom]);
+
+  // ✅ CALCUL : Padding pour la FlatList
+  const flatListPaddingBottom = useMemo(() => {
+    // Assurer qu'il y a assez d'espace pour voir le dernier produit
+    // TabBar + FAB (56px) + marges (40px) = environ 160px minimum
+    return fabBottomPosition + 56 + 40;
+  }, [fabBottomPosition]);
 
   // ✅ NOUVEAU : Calcul du nombre de filtres actifs
   const activeFiltersCount = useMemo(() => {
@@ -54,13 +68,57 @@ const HomeScreen = () => {
 
   const hasActiveFilters = activeFiltersCount > 0;
 
+  // ✅ NOUVEAU : Tri des produits par date de création/modification (plus récents en premier)
+  const sortedProducts = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    
+    // Créer une copie pour éviter de muter le tableau original
+    const productsCopy = [...products];
+    
+    return productsCopy.sort((a, b) => {
+      // Priorité 1: Si updatedAt existe, l'utiliser
+      const aDate = a.updatedAt || a.createdAt;
+      const bDate = b.updatedAt || b.createdAt;
+      
+      if (aDate && bDate) {
+        // Trier par date décroissante (plus récent en premier)
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      }
+      
+      // Priorité 2: Si seulement createdAt existe
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      
+      // Priorité 3: Si aucune date, utiliser l'ID comme indicateur d'ordre
+      if (a.id && b.id) {
+        // Tenter de convertir en nombre pour un tri numérique
+        const aId = isNaN(Number(a.id)) ? a.id : Number(a.id);
+        const bId = isNaN(Number(b.id)) ? b.id : Number(b.id);
+        
+        if (typeof aId === 'number' && typeof bId === 'number') {
+          return bId - aId; // Plus grand ID en premier
+        }
+        
+        // Sinon, tri lexicographique inverse
+        return b.id.localeCompare(a.id);
+      }
+      
+      // Fallback: garder l'ordre original
+      return 0;
+    });
+  }, [products]);
+
+  // ✅ MODIFIÉ : Application des filtres sur les produits triés
   const filteredProducts = useMemo(() => {
-    let filtered = products;
+    let filtered = sortedProducts; // ✅ Utiliser sortedProducts au lieu de products
+    
     if (filters.category) filtered = filtered.filter(p => p.category === filters.category);
     if (filters.seller) filtered = filtered.filter(p => p.vendeurs === filters.seller);
     if (filters.minPrice) filtered = filtered.filter(p => p.price >= parseFloat(filters.minPrice));
     if (filters.maxPrice) filtered = filtered.filter(p => p.price <= parseFloat(filters.maxPrice));
     if (filters.activeOnly) filtered = filtered.filter(p => p.isActive);
+    
     if (search.trim().length > 0) {
       filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -69,8 +127,9 @@ const HomeScreen = () => {
         p.vendeurs.toLowerCase().includes(search.toLowerCase())
       );
     }
+    
     return filtered;
-  }, [products, filters, search]);
+  }, [sortedProducts, filters, search]);
 
   // Calcul des produits paginés
   const paginatedData = useMemo(() => {
@@ -109,8 +168,9 @@ const HomeScreen = () => {
     }
   };
 
-  const categories = Array.from(new Set(products.map(p => p.category)));
-  const sellers = Array.from(new Set(products.map(p => p.vendeurs)));
+  // ✅ MODIFIÉ : Utiliser sortedProducts pour les filtres (catégories/vendeurs)
+  const categories = Array.from(new Set(sortedProducts.map(p => p.category)));
+  const sellers = Array.from(new Set(sortedProducts.map(p => p.vendeurs)));
 
   // Header Component pour la FlatList
   const renderHeader = () => (
@@ -121,6 +181,12 @@ const HomeScreen = () => {
         {search.trim().length > 0 && (
           <Text style={styles.searchResultText}>
             Résultats pour "{search}"
+          </Text>
+        )}
+        {/* ✅ NOUVEAU : Indicateur des filtres actifs */}
+        {hasActiveFilters && (
+          <Text style={styles.activeFiltersIndicator}>
+            {activeFiltersCount} filtre{activeFiltersCount > 1 ? 's' : ''} appliqué{activeFiltersCount > 1 ? 's' : ''}
           </Text>
         )}
         {totalPages > 1 && (
@@ -221,17 +287,35 @@ const HomeScreen = () => {
               style={styles.searchFormInputInHeader}
             />
           </View>
-          <TouchableOpacity 
-            style={styles.filterBtnInHeader} 
-            onPress={() => setFilterModalVisible(true)} 
-            activeOpacity={0.8}
-          >
-            <Ionicons name="options" size={24} color="#fff" />
-          </TouchableOpacity>
+          {/* ✅ NOUVEAU : Bouton filtre avec badge d'indication */}
+          <View style={styles.filterButtonContainer}>
+            <TouchableOpacity 
+              style={[
+                styles.filterBtnInHeader,
+                hasActiveFilters && styles.filterBtnActive
+              ]} 
+              onPress={() => setFilterModalVisible(true)} 
+              activeOpacity={0.8}
+            >
+              <Ionicons 
+                name="options" 
+                size={24} 
+                color={hasActiveFilters ? Colors.light.tint : "#fff"} 
+              />
+            </TouchableOpacity>
+            {/* ✅ NOUVEAU : Badge du nombre de filtres */}
+            {hasActiveFilters && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>
+                  {activeFiltersCount}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </LinearGradient>
 
-      {/* Products list */}
+      {/* ✅ CORRIGÉ : Products list avec padding calculé dynamiquement */}
       <FlatList
         data={paginatedData}
         renderItem={({ item }) => (
@@ -245,19 +329,22 @@ const HomeScreen = () => {
         ListFooterComponent={renderFooter}
         contentContainerStyle={[
           styles.listContent,
-          { paddingBottom: safeTabBarHeight + 20 }
+          { 
+            // ✅ CORRIGÉ : Padding dynamique pour éviter le chevauchement
+            paddingBottom: flatListPaddingBottom
+          }
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       />
 
-      {/* FAB avec position corrigée */}
+      {/* ✅ CORRIGÉ : FAB avec position parfaite et centrage */}
       <FloatingActionButton 
         onPress={handleAddProduct} 
         color={Colors.light.tint}
         style={[
           styles.fab,
-          { bottom: safeTabBarHeight + 20 }
+          { bottom: fabBottomPosition }
         ]}
       />
 
@@ -281,20 +368,20 @@ const HomeScreen = () => {
   );
 };
 
-// ✅ STYLES MIS À JOUR
+// ✅ STYLES CORRIGÉS avec position optimisée du FAB
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9ff',
   },
   listContent: {
-    // Pas de paddingBottom fixe - géré dynamiquement
+    // Padding géré dynamiquement
   },
   // ✅ Header agrandi pour inclure la recherche
   headerGradient: {
     paddingHorizontal: 20,
     paddingTop: 60,
-    paddingBottom: 20, // Espace pour la recherche
+    paddingBottom: 20,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
   },
@@ -307,9 +394,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 20, // Espace avant la recherche
+    marginBottom: 20,
   },
-  // ✅ NOUVEAU : Styles pour la recherche dans le header
+  // ✅ Styles pour la recherche dans le header
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -323,6 +410,10 @@ const styles = StyleSheet.create({
   searchInputInHeader: {
     color: '#fff',
   },
+  // ✅ Container pour le bouton filtre avec badge
+  filterButtonContainer: {
+    position: 'relative',
+  },
   filterBtnInHeader: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
@@ -331,6 +422,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
+  },
+  filterBtnActive: {
+    backgroundColor: '#fff',
+    borderColor: '#fff',
+    shadowColor: Colors.light.tint,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  // ✅ Badge de notification des filtres
+  filterBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  filterBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    lineHeight: 14,
   },
   
   sectionHeader: {
@@ -349,6 +469,19 @@ const styles = StyleSheet.create({
     color: Colors.light.tabIconDefault,
     fontStyle: 'italic',
   },
+  activeFiltersIndicator: {
+    fontSize: 14,
+    color: '#FF6B6B',
+    fontWeight: '600',
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+  },
   pageIndicator: {
     fontSize: 14,
     color: Colors.light.tint,
@@ -360,11 +493,21 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 8,
   },
+  
+  // ✅ CORRIGÉ : Style du FAB optimisé et centré
   fab: {
     position: 'absolute',
-    right: 24,
-    zIndex: 1000,
+    alignSelf: 'center', // ✅ Centrage horizontal automatique
+    zIndex: 100, // ✅ Au-dessus de tout
+    // ✅ Ombre douce et élévation
+    shadowColor: Colors.light.tint,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 12,
+    // bottom sera défini dynamiquement via la prop style
   },
+  
   paginationContainer: {
     backgroundColor: Colors.light.background,
     paddingHorizontal: 20,

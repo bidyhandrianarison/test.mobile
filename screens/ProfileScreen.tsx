@@ -27,6 +27,21 @@ const ProfileScreen = () => {
   const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
   const safeTabBarHeight = tabBarHeight + Math.max(insets.bottom, 0);
 
+  // ✅ NOUVEAU : Fonction pour générer les initiales
+  const getUserInitials = (name: string) => {
+    if (!name || name.trim().length === 0) return 'U';
+    
+    const words = name.trim().split(' ');
+    if (words.length === 1) {
+      return words[0].charAt(0).toUpperCase();
+    }
+    
+    // Prendre la première lettre des deux premiers mots
+    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+  };
+
+  const userInitials = getUserInitials(user?.name || '');
+
   const handleLogout = async () => {
     Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
       { text: 'Annuler', style: 'cancel' },
@@ -51,7 +66,6 @@ const ProfileScreen = () => {
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
-        // ✅ CORRECTION : ContentContainerStyle avec padding bottom correct
         contentContainerStyle={{
           paddingBottom: safeTabBarHeight + 20
         }}
@@ -72,18 +86,23 @@ const ProfileScreen = () => {
           <View style={styles.whiteRoundedSection} />
         </LinearGradient>
 
-        {/* Avatar centré sur l'intersection */}
+        {/* ✅ MODIFIÉ : Avatar avec initiales seulement (sans badge) */}
         <View style={styles.avatarContainer}>
           <View style={styles.avatarWrapper}>
-            <Image
-              source={{ 
-                uri: 'https://ui-avatars.com/api/?name=' + 
-                     encodeURIComponent(user?.name || 'User') + 
-                     '&background=' + Colors.light.tint.substring(1) +
-                     '&color=fff&size=120'
-              }}
-              style={styles.avatar}
-            />
+            {/* ✅ Dégradé de fond pour l'avatar */}
+            <LinearGradient
+              colors={[Colors.light.tint, '#4DA6E8']}
+              style={styles.avatarGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              {/* ✅ Initiales en grand */}
+              <Text style={styles.avatarInitials}>
+                {userInitials}
+              </Text>
+            </LinearGradient>
+            
+            {/* ✅ SUPPRIMÉ : Badge avec icône utilisateur */}
           </View>
         </View>
 
@@ -108,7 +127,7 @@ const ProfileScreen = () => {
   );
 };
 
-// Styles restent identiques
+// ✅ STYLES SIMPLIFIÉS (suppression du badge utilisateur)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -161,11 +180,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 8,
+    position: 'relative',
   },
-  avatar: {
+  // ✅ Dégradé pour l'avatar
+  avatarGradient: {
     width: 112,
     height: 112,
     borderRadius: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // ✅ Style pour les initiales
+  avatarInitials: {
+    fontSize: 42,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   userInfo: {
     alignItems: 'center',
