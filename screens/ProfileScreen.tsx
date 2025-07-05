@@ -8,11 +8,12 @@ import {
   Image, 
   Alert,
   SafeAreaView,
-  Platform
+  Platform,
+  Animated
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import UserStats from '../components/UserStats';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,7 +43,25 @@ const ProfileScreen = () => {
 
   const userInitials = getUserInitials(user?.name || '');
 
-  const handleLogout = async () => {
+  // ✅ NOUVEAU : Animation pour le bouton de déconnexion
+  const logoutButtonScale = new Animated.Value(1);
+
+  const handleLogoutPress = () => {
+    // Animation de clic
+    Animated.sequence([
+      Animated.timing(logoutButtonScale, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoutButtonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Afficher la confirmation
     Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
       { text: 'Annuler', style: 'cancel' },
       {
@@ -77,8 +96,28 @@ const ProfileScreen = () => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          {/* Bouton d'édition en haut à droite */}
-          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+          {/* ✅ NOUVEAU : Bouton de déconnexion en haut à gauche */}
+          <Animated.View style={[
+            styles.logoutButtonContainer,
+            { transform: [{ scale: logoutButtonScale }] }
+          ]}>
+            <TouchableOpacity 
+              style={styles.logoutIconButton} 
+              onPress={handleLogoutPress}
+              activeOpacity={0.8}
+              accessibilityLabel="Se déconnecter"
+            >
+              <Feather name="log-out" size={20} color="#E53935" />
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Bouton d'édition en haut à droite (inchangé) */}
+          <TouchableOpacity 
+            style={styles.editButton} 
+            onPress={handleEditProfile}
+            activeOpacity={0.8}
+            accessibilityLabel="Modifier le profil"
+          >
             <Ionicons name="create-outline" size={24} color={Colors.light.background} />
           </TouchableOpacity>
 
@@ -86,7 +125,7 @@ const ProfileScreen = () => {
           <View style={styles.whiteRoundedSection} />
         </LinearGradient>
 
-        {/* ✅ MODIFIÉ : Avatar avec initiales seulement (sans badge) */}
+        {/* ✅ Avatar avec initiales (inchangé) */}
         <View style={styles.avatarContainer}>
           <View style={styles.avatarWrapper}>
             {/* ✅ Dégradé de fond pour l'avatar */}
@@ -101,8 +140,6 @@ const ProfileScreen = () => {
                 {userInitials}
               </Text>
             </LinearGradient>
-            
-            {/* ✅ SUPPRIMÉ : Badge avec icône utilisateur */}
           </View>
         </View>
 
@@ -114,20 +151,12 @@ const ProfileScreen = () => {
 
         {/* Composant de statistiques intégré */}
         <UserStats />
-
-        {/* Bouton de déconnexion */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={20} color={Colors.light.background} />
-            <Text style={styles.logoutButtonText}>Se déconnecter</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-// ✅ STYLES SIMPLIFIÉS (suppression du badge utilisateur)
+// ✅ STYLES AMÉLIORÉS avec nouveau bouton de déconnexion iconique
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -142,6 +171,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
   },
+
+  // ✅ NOUVEAU : Container pour le bouton de déconnexion iconique
+  logoutButtonContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+  },
+  
+  // ✅ NOUVEAU : Style du bouton de déconnexion iconique
+  logoutIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#E53935',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(229, 57, 53, 0.1)',
+  },
+
+  // ✅ Style du bouton d'édition (légèrement ajusté pour symétrie)
   editButton: {
     position: 'absolute',
     top: 50,
@@ -152,7 +208,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
+
   whiteRoundedSection: {
     position: 'absolute',
     bottom: 0,
@@ -202,7 +264,7 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 24,
   },
   userName: {
     fontSize: 24,
@@ -213,30 +275,6 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 16,
     color: Colors.light.tabIconDefault,
-  },
-  actionsContainer: {
-    paddingHorizontal: 16,
-    marginTop: 16,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF6B6B',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-    gap: 8,
-  },
-  logoutButtonText: {
-    color: Colors.light.background,
-    fontWeight: '600',
-    fontSize: 16,
   },
 });
 
