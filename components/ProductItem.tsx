@@ -5,6 +5,9 @@ import Colors from '../constants/Colors';
 import { Product } from '../types/Product';
 import ProductOptionsModal from './ProductOptionsModal';
 
+/**
+ * Props interface for ProductItem component
+ */
 interface ProductItemProps {
   product: Product;
   onEdit?: (product: Product) => void;
@@ -15,7 +18,15 @@ interface ProductItemProps {
 const { width } = Dimensions.get('window');
 
 /**
- * Carte produit moderne avec image à gauche, contenu au centre et menu à droite
+ * ProductItem component displays a product card with image, details, and options
+ * 
+ * Features:
+ * - Product image with fallback to initials
+ * - Price and stock information
+ * - Low stock warning badge
+ * - Inactive product overlay
+ * - Options menu with edit/delete/view actions
+ * - Category-based color coding
  */
 const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, onPress }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -23,31 +34,49 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
   const isLowStock = product.stock <= 5;
   const isInactive = !product.isActive;
 
+  /**
+   * Handle viewing product details
+   */
   const handleViewDetails = () => {
     setModalVisible(false);
     onPress && onPress(product);
   };
 
+  /**
+   * Handle editing the product
+   */
   const handleEdit = () => {
     setModalVisible(false);
     onEdit && onEdit(product);
   };
 
+  /**
+   * Handle deleting the product
+   */
   const handleDelete = () => {
     setModalVisible(false);
     onDelete && onDelete(product);
   };
 
+  /**
+   * Open the options menu modal
+   */
   const openOptionsMenu = () => {
     setModalVisible(true);
   };
 
-  // ✅ NOUVEAU : Gestion de l'erreur d'image
+  /**
+   * Handle image loading error
+   */
   const handleImageError = () => {
     setImageError(true);
   };
 
-  // ✅ NOUVEAU : Génération des initiales pour l'image de secours
+  /**
+   * Generate initials from product name for fallback image
+   * @param name - Product name
+   * @returns Initials string (max 2 characters)
+   */
   const getProductInitials = (name: string) => {
     return name
       .split(' ')
@@ -57,7 +86,11 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
       .toUpperCase();
   };
 
-  // ✅ NOUVEAU : Déterminer la couleur de fond basée sur la catégorie
+  /**
+   * Get background color based on product category
+   * @param category - Product category
+   * @returns Color string for the category
+   */
   const getCategoryColor = (category: string) => {
     const categoryColors: Record<string, string> = {
       'Électronique': '#E3F2FD',
@@ -89,7 +122,7 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
         activeOpacity={0.7}
         disabled={isInactive}
       >
-        {/* ✅ REMPLACÉ : Image du produit à la place de l'icône */}
+        {/* Product image container */}
         <View style={styles.imageContainer}>
           {!imageError && product.image ? (
             <Image
@@ -99,13 +132,12 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
               onError={handleImageError}
             />
           ) : (
-            // ✅ Image de secours avec initiales
             <View style={[styles.fallbackImage, { backgroundColor: categoryColor }]}>
               <Text style={styles.initialsText}>{productInitials}</Text>
             </View>
           )}
           
-          {/* Badge stock faible */}
+          {/* Low stock warning badge */}
           {isLowStock && (
             <View style={styles.stockBadge}>
               <Text style={styles.stockBadgeText}>!</Text>
@@ -113,7 +145,7 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
           )}
         </View>
 
-        {/* Contenu principal */}
+        {/* Main content */}
         <View style={styles.content}>
           <Text style={[styles.productName, isInactive && styles.inactiveText]} numberOfLines={2}>
             {product.name}
@@ -131,7 +163,7 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
           </View>
         </View>
 
-        {/* Bouton menu 3 points */}
+        {/* Options menu button */}
         <TouchableOpacity
           style={styles.menuButton}
           onPress={openOptionsMenu}
@@ -144,17 +176,17 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, on
           />
         </TouchableOpacity>
 
-        {/* Overlay pour les produits inactifs */}
+        {/* Overlay for inactive products */}
         {isInactive && (
           <View style={styles.inactiveOverlay}>
             <View style={styles.inactiveLabel}>
-              <Text style={styles.inactiveLabelText}>Inactif</Text>
+              <Text style={styles.inactiveLabelText}>Inactive</Text>
             </View>
           </View>
         )}
       </TouchableOpacity>
 
-      {/* Modal des options */}
+      {/* Options modal */}
       <ProductOptionsModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -197,98 +229,81 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
     opacity: 0.7,
   },
-  // ✅ NOUVEAU : Container pour l'image (même taille que l'ancienne icône)
   imageContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 12,
     marginRight: 16,
     position: 'relative',
     overflow: 'hidden',
   },
-  // ✅ NOUVEAU : Styles pour l'image du produit
   productImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 16,
+    borderRadius: 12,
   },
-  // ✅ NOUVEAU : Image de secours avec initiales
   fallbackImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 16,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
   },
-  // ✅ NOUVEAU : Style pour les initiales
   initialsText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.light.tint,
-    textAlign: 'center',
+    color: '#666',
   },
   stockBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
+    backgroundColor: '#ff4757',
+    borderRadius: 10,
     width: 20,
     height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.light.background,
   },
   stockBadgeText: {
-    color: Colors.light.background,
+    color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingRight: 12,
   },
   productName: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.light.text,
     marginBottom: 4,
-    lineHeight: 20,
   },
   price: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.light.tint,
-    marginBottom: 6,
+    color: '#2f95dc',
+    marginBottom: 4,
   },
   metaRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   vendor: {
-    fontSize: 13,
-    color: '#4CAF50',
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#666',
     flex: 1,
   },
   stock: {
-    fontSize: 13,
-    color: Colors.light.tabIconDefault,
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#666',
     marginLeft: 8,
   },
   menuButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.02)',
+    padding: 8,
+    marginLeft: 8,
   },
   inactiveOverlay: {
     position: 'absolute',
@@ -296,30 +311,30 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   inactiveLabel: {
-    backgroundColor: Colors.light.tabIconDefault,
+    backgroundColor: '#666',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
   inactiveLabelText: {
-    color: Colors.light.background,
+    color: '#fff',
     fontSize: 12,
     fontWeight: '600',
   },
   inactiveText: {
-    color: Colors.light.tabIconDefault,
+    color: '#999',
   },
   inactivePrice: {
-    color: Colors.light.tabIconDefault,
+    color: '#999',
   },
   inactiveMeta: {
-    color: Colors.light.tabIconDefault,
+    color: '#999',
   },
 });
 

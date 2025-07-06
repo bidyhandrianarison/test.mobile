@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useProducts } from '../contexts/ProductContext';
+import { useAuth } from '../contexts/AuthContext';
 import FormInput from '../components/FormInput';
 import Colors from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ const VENDEURS = [
 const AddProductScreen = () => {
   const navigation = useNavigation();
   const { addProduct, fetchProducts } = useProducts();
+  const { user } = useAuth();
 
   // Form state
   const [form, setForm] = useState({
@@ -61,7 +63,7 @@ const AddProductScreen = () => {
         vendeurs: form.vendeurs,
         image: form.image,
         isActive: true,
-      });
+      }, user?.email, user?.id);
       
       Alert.alert('Succès', 'Produit ajouté avec succès', [
         { text: 'OK', onPress: () => navigation.goBack() },

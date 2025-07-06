@@ -3,12 +3,18 @@ import mockProducts from '../constants/products.json';
 import { useAuth } from './AuthContext';
 import { Product, CreateProductData, UpdateProductData, UserStats } from '../types/Product';
 
+/**
+ * State interface for the products context
+ */
 type ProductsState = {
   products: Product[];
   isLoading: boolean;
   error: string | null;
 };
 
+/**
+ * Action types for the products reducer
+ */
 type ProductsAction =
   | { type: 'SET_PRODUCTS'; payload: Product[] }
   | { type: 'ADD_PRODUCT'; payload: Product }
@@ -17,20 +23,26 @@ type ProductsAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string };
 
+/**
+ * Context interface providing product management functionality
+ */
 type ProductsContextType = ProductsState & {
   fetchProducts: () => Promise<void>;
-  addProduct: (productData: CreateProductData) => Promise<void>;
+  addProduct: (productData: CreateProductData, userEmail?: string, userId?: string) => Promise<void>;
   updateProduct: (productId: string, productData: UpdateProductData) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
-  getUserProducts: () => Product[];
+  getUserProducts: (userEmail?: string, userId?: string) => Product[];
   searchProducts: (query: string) => Promise<Product[]>;
-  getUserStats: (userEmail: string, userName?: string) => UserStats;
+  getUserStats: (userEmail: string, userName?: string, userId?: string) => UserStats;
 };
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
 
 /**
- * Reducer pour la gestion de l'état des produits
+ * Reducer for managing products state
+ * @param state - Current products state
+ * @param action - Action to perform
+ * @returns Updated products state
  */
 const productsReducer = (state: ProductsState, action: ProductsAction): ProductsState => {
   switch (action.type) {
@@ -59,11 +71,18 @@ const productsReducer = (state: ProductsState, action: ProductsAction): Products
   }
 };
 
-// Base de données simulée
+// Simulated database
 let productsDB: Product[] = [...mockProducts];
 
 /**
- * Fournit le contexte produit à l'application
+ * ProductsProvider component provides product management context
+ * 
+ * Features:
+ * - Product CRUD operations
+ * - User-specific product filtering
+ * - Search functionality
+ * - User statistics calculation
+ * - Loading and error state management
  */
 export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(productsReducer, {
@@ -72,23 +91,15 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     error: null,
   });
 
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      fetchProducts();
-    }
-  }, [user]);
-
   /**
-   * Charge les produits depuis la "base de données"
+   * Fetch all products from the simulated database
    */
   const fetchProducts = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
       
-      // Normaliser les produits pour s'assurer que tous ont les bonnes propriétés
+      // Normalize products to ensure all have correct properties
       const normalizedProducts = productsDB.map(product => ({
         ...product,
         createdBy: product.createdBy || undefined,
@@ -102,65 +113,82 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addProduct = async (productData: CreateProductData) => {
+  /**
+   * Add a new product to the database
+   * @param productData - Product data to create
+   * @param userEmail - User's email address
+   * @param userId - User's ID
+   */
+  const addProduct = async (productData: CreateProductData, userEmail?: string, userId?: string) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     const newProduct: Product = {
       ...productData,
       id: String(Date.now()),
-      createdBy: user?.email || undefined,
+      createdBy: userEmail || undefined,
       createdAt: new Date().toISOString(),
-      userId: user?.id || undefined,
+      userId: userId || undefined,
     };
     
-    // ✅ CORRECTION : Mise à jour immédiate de la base de données ET du state
     productsDB.push(newProduct);
     dispatch({ type: 'ADD_PRODUCT', payload: newProduct });
     
-    // ✅ DEBUG : Log pour vérifier l'ajout
-    console.log('✅ Product added:', newProduct.name, 'Total products:', productsDB.length);
+    console.log('Product added:', newProduct.name, 'Total products:', productsDB.length);
   };
 
+  /**
+   * Update an existing product
+   * @param productId - ID of the product to update
+   * @param productData - Updated product data
+   */
   const updateProduct = async (productId: string, productData: UpdateProductData) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     const existingIndex = productsDB.findIndex((p) => p.id === productId);
     
-    if (existingIndex === -1) throw new Error('Produit introuvable');
+    if (existingIndex === -1) throw new Error('Product not found');
     
-    const updatedProduct: Product = {
+      const updatedProduct: Product = {
       ...productsDB[existingIndex],
-      ...productData,
+        ...productData,
       id: productId,
     };
     
-    // ✅ CORRECTION : Mise à jour immédiate de la base de données ET du state
     productsDB[existingIndex] = updatedProduct;
     dispatch({ type: 'UPDATE_PRODUCT', payload: updatedProduct });
     
-    // ✅ DEBUG : Log pour vérifier la mise à jour
-    console.log('✅ Product updated:', updatedProduct.name);
-  };
-
-  const deleteProduct = async (productId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    // ✅ CORRECTION : Mise à jour immédiate de la base de données ET du state
-    productsDB = productsDB.filter((p) => p.id !== productId);
-    dispatch({ type: 'DELETE_PRODUCT', payload: productId });
-    
-    // ✅ DEBUG : Log pour vérifier la suppression
-    console.log('✅ Product deleted, remaining products:', productsDB.length);
+    console.log('Product updated:', updatedProduct.name);
   };
 
   /**
-   * Obtient les produits créés par l'utilisateur connecté
+   * Delete a product from the database
+   * @param productId - ID of the product to delete
    */
-  const getUserProducts = (): Product[] => {
-    if (!user) return [];
+  const deleteProduct = async (productId: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    productsDB = productsDB.filter((p) => p.id !== productId);
+    dispatch({ type: 'DELETE_PRODUCT', payload: productId });
+    
+    console.log('Product deleted, remaining products:', productsDB.length);
+  };
+
+  /**
+   * Get products created by the current user
+   * @param userEmail - User's email address
+   * @param userId - User's ID
+   * @returns Array of user's products
+   */
+  const getUserProducts = (userEmail?: string, userId?: string): Product[] => {
+    if (!userEmail && !userId) return [];
     return state.products.filter(p => 
-      p.createdBy === user.email || p.userId === user.id
+      p.createdBy === userEmail || p.userId === userId
     );
   };
 
+  /**
+   * Search products by query string
+   * @param query - Search query
+   * @returns Array of matching products
+   */
   const searchProducts = async (query: string): Promise<Product[]> => {
     const lowerQuery = query.toLowerCase();
     return state.products.filter(p =>
@@ -172,17 +200,21 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * ✅ AMÉLIORATION : Statistiques détaillées des produits d'un utilisateur
+   * Get detailed statistics for a user's products
+   * @param userEmail - User's email address
+   * @param userName - Optional user's name for fallback matching
+   * @param userId - Optional user's ID
+   * @returns User statistics object
    */
-  const getUserStats = (userEmail: string, userName?: string): UserStats => {
+  const getUserStats = (userEmail: string, userName?: string, userId?: string): UserStats => {
     const userProducts = state.products.filter(p => {
-      // Vérifier par email de création (le plus fiable)
+      // Check by creation email (most reliable)
       if (p.createdBy === userEmail) return true;
       
-      // Vérifier par ID utilisateur (compatibilité backward)
-      if (p.userId === user?.id) return true;
+      // Check by user ID (backward compatibility)
+      if (p.userId === userId) return true;
       
-      // Vérifier par nom de vendeur (fallback)
+      // Check by seller name (fallback)
       if (p.vendeurs && userName) {
         const vendeurNormalized = p.vendeurs.toLowerCase().trim();
         const userNameNormalized = userName.toLowerCase().trim();
@@ -222,7 +254,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     deleteProduct,
     getUserProducts,
     searchProducts,
-    getUserStats, // ✅ Méthode exposée
+    getUserStats,
   };
 
   return (
@@ -233,7 +265,9 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
 };
 
 /**
- * Hook pour accéder au contexte produit
+ * Hook to access the products context
+ * @returns Products context with all methods and state
+ * @throws Error if used outside of ProductsProvider
  */
 export const useProducts = () => {
   const context = useContext(ProductsContext);
@@ -241,5 +275,4 @@ export const useProducts = () => {
   return context;
 };
 
-// Export du type Product pour usage externe
 export type { Product };

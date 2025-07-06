@@ -4,15 +4,30 @@ import { Button } from 'react-native-elements';
 import FormInput from '../components/FormInput';
 import ErrorMessage from '../components/ErrorMessage';
 import FormFieldError from '../components/FormFieldError';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { validateEmail, validatePassword } from '../utils/validation';
+import { mapAuthError, clearErrorsOnInput } from '../utils/errorHandling';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../types/navigation';
 
-// ✅ CORRECTION : Type de navigation spécifique pour Auth
+/**
+ * Navigation prop type for the login screen
+ */
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
+/**
+ * LoginScreen component handles user authentication
+ * 
+ * Features:
+ * - Email and password validation
+ * - Real-time form validation
+ * - Global error handling
+ * - Automatic redirection for authenticated users
+ * - Navigation to signup screen
+ * - Authentication guards to prevent authenticated users from accessing
+ */
 const LoginScreen = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -22,132 +37,139 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
-  
-  // ✅ NOUVEAU : État pour l'erreur globale de connexion
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // ✅ CORRECTION : Redirection automatique si déjà connecté
+  /**
+   * Redirects authenticated users automatically and prevents access
+   */
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      console.log('Utilisateur déjà connecté, redirection automatique...');
+      console.log('Authenticated user accessing login screen - should be redirected by RootNavigator');
+      // The RootNavigator will handle the redirection automatically
+      // This is just for logging and debugging
     }
   }, [isAuthenticated, isLoading]);
 
+  /**
+   * Handles email input changes with validation
+   * @param text - The email text entered by user
+   */
   const handleEmailChange = (text: string) => {
     setEmail(text);
-    setGlobalError(null); // ✅ Effacer l'erreur globale lors de la saisie
+    // Clear global error when user starts typing
+    clearErrorsOnInput(setGlobalError, setEmailError);
     if (text.length === 0 || validateEmail(text)) {
       setEmailError(null);
     } else {
-      setEmailError('Email invalide');
+      setEmailError('Invalid email');
     }
   };
 
+  /**
+   * Handles password input changes with validation
+   * @param text - The password text entered by user
+   */
   const handlePasswordChange = (text: string) => {
     setPassword(text);
-    setGlobalError(null); // ✅ Effacer l'erreur globale lors de la saisie
+    // Clear global error when user starts typing
+    clearErrorsOnInput(setGlobalError, setPasswordError);
     if (text.length === 0 || validatePassword(text)) {
       setPasswordError(null);
     } else {
-      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      setPasswordError('Password must contain at least 6 characters');
     }
   };
 
+  /**
+   * Validates email on blur event
+   */
   const handleEmailBlur = () => {
     if (!validateEmail(email)) {
-      setEmailError('Email invalide');
+      setEmailError('Invalid email');
     }
   };
 
-  // ✅ NOUVEAU : Fonction pour effacer l'erreur globale
+  /**
+   * Dismisses the global error message
+   */
   const handleDismissGlobalError = () => {
     setGlobalError(null);
   };
 
-  // ✅ CORRECTION : Navigation typée
-  const ToSignup = () => {
+  /**
+   * Navigates to the signup screen
+   */
+  const navigateToSignup = () => {
     navigation.navigate('Signup');
   };
 
-  const handleLogin = async () => {
-    // Validation des champs avant de continuer
+  /**
+   * Handles the login form submission
+   * Validates all fields and attempts user authentication
+   */
+    const handleLogin = async () => {
+    // Validate all fields before proceeding
     if (!email.trim()) {
-      setEmailError('Email requis');
+      setEmailError('Email required');
       return;
     }
     if (!password.trim()) {
-      setPasswordError('Mot de passe requis');
+      setPasswordError('Password required');
       return;
     }
     if (!validateEmail(email)) {
-      setEmailError('Email invalide');
+      setEmailError('Invalid email');
       return;
     }
     if (!validatePassword(password)) {
-      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      setPasswordError('Password must contain at least 6 characters');
       return;
     }
 
     setLoginLoading(true);
-    setEmailError(null);
-    setPasswordError(null);
-    setGlobalError(null); // ✅ Effacer l'erreur globale avant tentative
+        setEmailError(null);
+        setPasswordError(null);
+    setGlobalError(null);
     
-    try {
-      console.log('Tentative de connexion...', { email });
-      const success = await login(email, password);
+        try {
+      console.log('Attempting login...', { email });
+            const success = await login(email, password);
       
-      if (success) {
-        console.log('Connexion réussie, redirection automatique par RootNavigator');
-        // ✅ CORRECTION : Pas de navigation manuelle nécessaire
-        // Le RootNavigator détectera automatiquement isAuthenticated = true
-        // et redirigera vers MainTabs
+            if (success) {
+        console.log('Login successful, automatic redirection by RootNavigator');
+        // RootNavigator will automatically detect isAuthenticated = true
+        // and redirect to MainTabs
       } else {
-        // ✅ NOUVEAU : Erreur globale au lieu d'erreur de champ
-        setGlobalError('Échec de la connexion. Vérifiez vos identifiants.');
-      }
-    } catch (error: any) {
-      console.error('Erreur de connexion:', error);
+        setGlobalError('Invalid email or password. Please check your credentials.');
+            }
+        } catch (error: any) {
+      console.error('Login error:', error);
       
-      // ✅ AMÉLIORÉ : Gestion plus fine des erreurs
-      if (error.message.includes('mot de passe') || error.message.includes('password')) {
-        setPasswordError(error.message);
-      } else if (error.message.includes('email') || error.message.includes('Email')) {
-        setEmailError(error.message);
-      } else {
-        // ✅ NOUVEAU : Erreur globale pour les erreurs de connexion générales
-        setGlobalError(
-          error.message || 
-          'Erreur de connexion. Vérifiez votre connexion internet et réessayez.'
-        );
-      }
-    } finally {
+      // Use the new error handling utility
+      const authError = mapAuthError(error);
+      
+      if (authError.field === 'email') {
+        setEmailError(authError.message);
+      } else if (authError.field === 'password') {
+        setPasswordError(authError.message);
+            } else {
+        setGlobalError(authError.message);
+            }
+        } finally {
       setLoginLoading(false);
     }
   };
 
-  // ✅ CORRECTION : Afficher un loader si l'authentification est en cours
-  if (isLoading) {
     return (
-      <SafeAreaView style={styles.safeContainer}>
-        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text>Vérification de la session...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safeContainer}>
+        <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.select({ ios: 'padding', android: undefined })}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Connexion</Text>
-          <Text style={styles.subtitle}>Connectez-vous à votre compte pour gérer vos produits</Text>
+          <Text style={styles.title}>Login</Text>
+          <Text style={styles.subtitle}>Sign in to your account to manage your products</Text>
           
-          {/* ✅ NOUVEAU : Message d'erreur globale */}
           <ErrorMessage
             message={globalError}
             onDismiss={handleDismissGlobalError}
@@ -156,28 +178,28 @@ const LoginScreen = () => {
         </View>
 
         <View style={styles.form}>
-          <FormInput
+                    <FormInput
             icon="person"
             handleChange={handleEmailChange}
-            isPassword={false}
-            labelValue={email}
+                        isPassword={false}
+                        labelValue={email}
             label="Email"
             onBlur={handleEmailBlur}
-          />
+                    />
           <FormFieldError error={emailError} />
 
-          <FormInput
+                    <FormInput
             icon="shield-lock"
             handleChange={handlePasswordChange}
-            isPassword={true}
-            labelValue={password}
-            label="Mot de passe"
+                        isPassword={true}
+                        labelValue={password}
+            label="Password"
             onBlur={() => {}}
           />
           <FormFieldError error={passwordError} />
 
           <Button
-            title="Se connecter"
+            title="Sign In"
             onPress={handleLogin}
             loading={loginLoading}
             buttonStyle={styles.loginButton}
@@ -186,34 +208,33 @@ const LoginScreen = () => {
           />
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Vous n'avez pas de compte ?</Text>
-            <TouchableOpacity onPress={ToSignup}>
-              <Text style={styles.signupLink}>Créer un compte</Text>
+            <Text style={styles.footerText}>Don't have an account?</Text>
+            <TouchableOpacity onPress={navigateToSignup}>
+              <Text style={styles.signupLink}>Create account</Text>
             </TouchableOpacity>
-          </View>
-        </View>
+                </View>
+            </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+        </SafeAreaView>
   );
 };
 
 export default LoginScreen;
 
-// ✅ STYLES AMÉLIORÉS
 const styles = StyleSheet.create({
   safeContainer: {
-    flex: 1,
+        flex: 1,
     backgroundColor: '#f0f4ff',
-  },
-  container: {
-    flex: 1,
+    },
+    container: {
+        flex: 1,
     padding: 24,
     justifyContent: 'center',
   },
   header: {
     marginBottom: 32,
-  },
-  title: {
+    },
+    title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#2f95dc',
@@ -226,7 +247,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
   },
-  // ✅ NOUVEAU : Style pour l'erreur globale
   globalError: {
     marginTop: 16,
     marginBottom: 8,

@@ -24,12 +24,9 @@ const ProfileScreen = () => {
   const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
 
-  // ✅ CALCUL CORRECT : Même hauteur que dans HomeScreen et RootNavigator
+  // ✅ CALCUL CORRECT : Même hauteur que dans HomeScreen
   const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
-  const totalTabBarHeight = tabBarHeight + Math.max(insets.bottom, 0);
-  
-  // ✅ NOUVEAU : Padding bottom pour le contenu (même calcul que HomeScreen)
-  const contentPaddingBottom = totalTabBarHeight + 20; // +20px de marge
+  const safeTabBarHeight = tabBarHeight + Math.max(insets.bottom, 0);
 
   // ✅ NOUVEAU : Fonction pour générer les initiales
   const getUserInitials = (name: string) => {
@@ -89,8 +86,7 @@ const ProfileScreen = () => {
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          // ✅ CORRIGÉ : Padding bottom calculé pour éviter le chevauchement avec la tab bar
-          paddingBottom: contentPaddingBottom,
+          paddingBottom: safeTabBarHeight + 20
         }}
       >
         {/* Header avec dégradé */}

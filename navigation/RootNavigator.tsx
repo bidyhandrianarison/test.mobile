@@ -6,9 +6,10 @@ import { View, ActivityIndicator, Text, Platform, StyleSheet, TouchableOpacity }
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-import { useAuth } from '../contexts/AuthContext';
 import Colors from '../constants/Colors';
+import { useAuth } from '../contexts/AuthContext';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -27,18 +28,26 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<TabStackParamList>();
 
-// Navigation d'authentification
+/**
+ * Authentication navigator for login and signup screens
+ */
 const AuthNavigator = () => {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator 
+      screenOptions={{ 
+        headerShown: false,
+      }}
+    >
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Signup" component={SignupScreen} />
     </AuthStack.Navigator>
   );
 };
 
-// Custom Tab Bar avec découpe centrale et FAB
-function CustomTabBar({ state, descriptors, navigation }) {
+/**
+ * Custom tab bar with central notch and floating action button
+ */
+function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
   const fabSize = 64;
@@ -55,10 +64,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
       bottom: insets.bottom, 
       height: totalTabBarHeight, 
       backgroundColor: 'transparent', 
-      // ✅ MODIFIÉ : Z-index encore plus réduit pour que les modals passent au-dessus
-      zIndex: 10 // Réduit de 50 à 10
+      zIndex: 10
     }}>
-      {/* Fond de la tab bar avec découpe centrale */}
+      {/* Tab bar background with central notch */}
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: totalTabBarHeight }}>
         <Svg width="100%" height={totalTabBarHeight} viewBox={`0 0 393 ${totalTabBarHeight}`} style={{ position: 'absolute', bottom: 0 }}>
           <Path
@@ -77,7 +85,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
         </Svg>
       </View>
 
-      {/* FAB centré */}
+      {/* Centered floating action button */}
       <TouchableOpacity
         style={{
           position: 'absolute',
@@ -95,8 +103,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
           shadowOpacity: 0.2,
           shadowRadius: 8,
           elevation: 8,
-          // ✅ MODIFIÉ : Z-index réduit pour le FAB aussi
-          zIndex: 11, // Réduit de 51 à 11
+          zIndex: 11,
         }}
         onPress={() => navigation.navigate('AddProduct')}
         activeOpacity={0.85}
@@ -104,10 +111,10 @@ function CustomTabBar({ state, descriptors, navigation }) {
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
 
-      {/* Tabs à gauche et à droite du FAB */}
+      {/* Tabs on left and right of FAB */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: totalTabBarHeight, paddingHorizontal: 32 }}>
         {state.routes.map((route, index) => {
-          if (route.name === 'AddProduct') return null; // FAB gère ce bouton
+          if (route.name === 'AddProduct') return null; // FAB handles this button
           const { options } = descriptors[route.key];
           const label =
             options.tabBarLabel !== undefined
@@ -125,7 +132,6 @@ function CustomTabBar({ state, descriptors, navigation }) {
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
               accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
               onPress={() => {
                 const event = navigation.emit({
                   type: 'tabPress',
@@ -140,7 +146,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
               activeOpacity={0.7}
             >
               <Ionicons name={iconName} size={24} color={isFocused ? Colors.light.tint : Colors.light.tabIconDefault} />
-              <Text style={{ color: isFocused ? Colors.light.tint : Colors.light.tabIconDefault, fontSize: 12, fontWeight: '600', marginTop: 2 }}>{label}</Text>
+              <Text style={{ color: isFocused ? Colors.light.tint : Colors.light.tabIconDefault, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                {typeof label === 'string' ? label : route.name}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -149,20 +157,51 @@ function CustomTabBar({ state, descriptors, navigation }) {
   );
 }
 
-// ✅ CORRECTION : Navigation principale sans padding bottom excessif
+/**
+ * Tab navigator for main app screens
+ */
+const TabNavigator = () => {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Home',
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profile',
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+/**
+ * Main navigator for authenticated users
+ */
 const MainNavigator = () => {
   return (
     <Stack.Navigator>
       <Stack.Screen 
         name="MainTabs" 
-        component={TabNavigator}
+        component={TabNavigator} 
         options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="AddProduct" 
         component={AddProductScreen}
         options={{ 
-          title: 'Ajouter un produit',
+          title: 'Add Product',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
@@ -173,7 +212,7 @@ const MainNavigator = () => {
         name="EditProfile" 
         component={EditProfileScreen}
         options={{ 
-          title: 'Modifier le profil',
+          title: 'Edit Profile',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
@@ -184,7 +223,7 @@ const MainNavigator = () => {
         name="ProductDetail" 
         component={ProductDetailScreen}
         options={{ 
-          title: 'Détail du produit',
+          title: 'Product Details',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' }
@@ -194,7 +233,7 @@ const MainNavigator = () => {
         name="ProductEdit" 
         component={ProductEditScreen}
         options={{ 
-          title: 'Modifier le produit',
+          title: 'Edit Product',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' }
@@ -204,54 +243,27 @@ const MainNavigator = () => {
   );
 };
 
-// Navigateur racine avec gestion de l'authentification
+/**
+ * Root navigator that handles authentication state
+ */
 const RootNavigator = () => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  console.log('RootNavigator - État actuel:', { 
-    isAuthenticated, 
-    isLoading, 
-    userEmail: user?.email 
-  });
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.tint} />
-        <Text style={styles.loadingText}>Chargement...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? (
-        <MainNavigator />
-      ) : (
-        <AuthNavigator />
-      )}
+      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 };
-
-const TabNavigator = () => {
-  const insets = useSafeAreaInsets();
-  const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
-  return (
-    <Tab.Navigator
-      tabBar={props => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: Colors.light.tint,
-        tabBarInactiveTintColor: Colors.light.tabIconDefault,
-        tabBarStyle: { display: 'none' }, // On masque la tabBar native
-      }}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
-    </Tab.Navigator>
-  );
-}
 
 const styles = StyleSheet.create({
   loadingContainer: {
@@ -261,7 +273,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 16,
     fontSize: 16,
     color: Colors.light.text,
   },

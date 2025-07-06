@@ -16,7 +16,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
-import EmptyState from '../components/EmptyState';
 
 // Type de navigation spécifique
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -38,10 +37,23 @@ const HomeScreen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 8;
 
-  // ✅ Calculs de hauteur précis
-  const tabBarHeight = Platform.OS === 'ios' ? 84 : 70;
-  const totalTabBarHeight = tabBarHeight + Math.max(insets.bottom, 0);
-  const contentPaddingBottom = totalTabBarHeight + 20;
+  // ✅ CALCUL PRÉCIS : Position du FAB en tenant compte de la TabBar et SafeArea
+  const fabBottomPosition = useMemo(() => {
+    // Hauteur de base de la TabBar selon la plateforme
+    const baseTabBarHeight = Platform.OS === 'ios' ? 84 : 70;
+    // Ajout de la safe area pour les appareils avec encoche/barre de geste
+    const totalTabBarHeight = baseTabBarHeight + Math.max(insets.bottom, 0);
+    
+    // Position le FAB à 10px au-dessus de la TabBar
+    return totalTabBarHeight + 10;
+  }, [insets.bottom]);
+
+  // ✅ CALCUL : Padding pour la FlatList
+  const flatListPaddingBottom = useMemo(() => {
+    // Assurer qu'il y a assez d'espace pour voir le dernier produit
+    // TabBar + FAB (56px) + marges (40px) = environ 160px minimum
+    return fabBottomPosition + 56 + 40;
+  }, [fabBottomPosition]);
 
   // ✅ NOUVEAU : Calcul du nombre de filtres actifs
   const activeFiltersCount = useMemo(() => {
@@ -103,21 +115,8 @@ const HomeScreen = () => {
     
     if (filters.category) filtered = filtered.filter(p => p.category === filters.category);
     if (filters.seller) filtered = filtered.filter(p => p.vendeurs === filters.seller);
-    
-    // ✅ CORRIGÉ : Conversion en float pour la comparaison des prix
-    if (filters.minPrice && filters.minPrice.trim() !== '') {
-      const minPrice = parseFloat(filters.minPrice);
-      if (!isNaN(minPrice)) {
-        filtered = filtered.filter(p => p.price >= minPrice);
-      }
-    }
-    if (filters.maxPrice && filters.maxPrice.trim() !== '') {
-      const maxPrice = parseFloat(filters.maxPrice);
-      if (!isNaN(maxPrice)) {
-        filtered = filtered.filter(p => p.price <= maxPrice);
-      }
-    }
-    
+    if (filters.minPrice) filtered = filtered.filter(p => p.price >= parseFloat(filters.minPrice));
+    if (filters.maxPrice) filtered = filtered.filter(p => p.price <= parseFloat(filters.maxPrice));
     if (filters.activeOnly) filtered = filtered.filter(p => p.isActive);
     
     if (search.trim().length > 0) {
@@ -276,19 +275,18 @@ const HomeScreen = () => {
         <Text style={styles.headerTitle}>Découvrez nos produits</Text>
         
         {/* ✅ DÉPLACÉ : Barre de recherche et filtre dans le header bleu */}
-        <View style={styles.searchRow}>
-          <View style={{ flex: 1 }}>
-            <FormInput
-              label="Rechercher un produit..."
-              labelValue={search}
-              icon="search"
-              handleChange={setSearch}
-              placeholder="Rechercher un produit..."
+      <View style={styles.searchRow}>
+        <View style={{ flex: 1 }}>
+          <FormInput
+            label="Rechercher des produits"
+            labelValue={search}
+            icon="search"
+            handleChange={setSearch}
               placeholderTextColor="rgba(255,255,255,0.7)"
               inputStyle={styles.searchInputInHeader}
               style={styles.searchFormInputInHeader}
-            />
-          </View>
+          />
+        </View>
           {/* ✅ NOUVEAU : Bouton filtre avec badge d'indication */}
           <View style={styles.filterButtonContainer}>
             <TouchableOpacity 
@@ -304,7 +302,7 @@ const HomeScreen = () => {
                 size={24} 
                 color={hasActiveFilters ? Colors.light.tint : "#fff"} 
               />
-            </TouchableOpacity>
+        </TouchableOpacity>
             {/* ✅ NOUVEAU : Badge du nombre de filtres */}
             {hasActiveFilters && (
               <View style={styles.filterBadge}>
@@ -314,43 +312,42 @@ const HomeScreen = () => {
               </View>
             )}
           </View>
-        </View>
+      </View>
       </LinearGradient>
 
-      {filteredProducts.length === 0 ? (
-        <EmptyState
-          type={search.trim().length > 0 || hasActiveFilters ? 'no-results' : 'no-products'}
-          title={search.trim().length > 0 || hasActiveFilters
-            ? 'Aucun produit ne correspond à votre recherche'
-            : 'Aucun produit à afficher'}
-          subtitle={search.trim().length > 0 || hasActiveFilters
-            ? 'Essayez de modifier votre recherche ou vos filtres.'
-            : 'Ajoutez un produit pour commencer.'}
-        />
-      ) : (
-        <FlatList
-          data={paginatedData}
-          renderItem={({ item }) => (
-            <ProductItem
-              product={item}
-              onPress={() => handlePressProduct(item)}
-            />
-          )}
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
-          contentContainerStyle={[
-            styles.listContent,
-            { 
-              // ✅ CORRIGÉ : Padding bottom calculé pour éviter le chevauchement
-              paddingBottom: contentPaddingBottom
-            }
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        />
-      )}
+      {/* ✅ CORRIGÉ : Products list avec padding calculé dynamiquement */}
+      <FlatList
+        data={paginatedData}
+        renderItem={({ item }) => (
+          <ProductItem
+            product={item}
+            onPress={() => handlePressProduct(item)}
+          />
+        )}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={[
+          styles.listContent,
+          { 
+            // ✅ CORRIGÉ : Padding dynamique pour éviter le chevauchement
+            paddingBottom: flatListPaddingBottom
+          }
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
 
+      {/* ✅ CORRIGÉ : FAB avec position parfaite et centrage */}
+      <FloatingActionButton 
+        onPress={handleAddProduct} 
+        color={Colors.light.tint}
+        style={{
+          ...styles.fab,
+          bottom: fabBottomPosition
+        }}
+      />
+      
       <FilterModal
         visible={filterModalVisible}
         onClose={() => setFilterModalVisible(false)}
@@ -358,34 +355,27 @@ const HomeScreen = () => {
         setFilters={setFilters}
         categories={categories}
         sellers={sellers}
-        onApply={() => {
-          console.log('Filtres appliqués:', filters);
-          setFilterModalVisible(false);
-        }}
-        onReset={() => {
-          console.log('Filtres réinitialisés');
-          setFilters({ 
-            category: null, 
-            seller: null,  
-            minPrice: '', 
-            maxPrice: '', 
-            activeOnly: false 
-          });
-          setFilterModalVisible(false);
-        }}
+        onApply={() => setFilterModalVisible(false)}
+        onReset={() => setFilters({ 
+          category: null, 
+          seller: null, 
+          minPrice: '', 
+          maxPrice: '', 
+          activeOnly: false 
+        })}
       />
     </View>
   );
 };
 
-// ✅ STYLES (inchangés)
+// ✅ STYLES CORRIGÉS avec position optimisée du FAB
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9ff',
   },
   listContent: {
-    // Le padding sera géré dynamiquement via contentContainerStyle
+    // Padding géré dynamiquement
   },
   // ✅ Header agrandi pour inclure la recherche
   headerGradient: {
@@ -409,7 +399,7 @@ const styles = StyleSheet.create({
   // ✅ Styles pour la recherche dans le header
   searchRow: {
     flexDirection: 'row',
-    alignItems: 'center', // ✅ CRUCIAL : Alignement vertical parfait
+    alignItems: 'center',
     gap: 12,
   },
   searchFormInputInHeader: {
@@ -420,20 +410,18 @@ const styles = StyleSheet.create({
   searchInputInHeader: {
     color: '#fff',
   },
-  // ✅ Container pour le bouton filtre avec alignement corrigé
+  // ✅ Container pour le bouton filtre avec badge
   filterButtonContainer: {
     position: 'relative',
-    alignSelf: 'flex-end', // ✅ Aligne avec le bas du FormInput
   },
   filterBtnInHeader: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
-    padding: 10, // ✅ Réduit pour mieux s'aligner
+    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
-    minHeight: 44, // ✅ NOUVEAU : Hauteur fixe pour correspondre au FormInput
   },
   filterBtnActive: {
     backgroundColor: '#fff',
@@ -506,13 +494,27 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   
+  // ✅ CORRIGÉ : Style du FAB optimisé et centré
+  fab: {
+    position: 'absolute',
+    alignSelf: 'center', // ✅ Centrage horizontal automatique
+    zIndex: 100, // ✅ Au-dessus de tout
+    // ✅ Ombre douce et élévation
+    shadowColor: Colors.light.tint,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 12,
+    // bottom sera défini dynamiquement via la prop style
+  },
+  
   paginationContainer: {
     backgroundColor: Colors.light.background,
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 20,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
-    marginTop: 0,
+    marginTop: 16,
   },
   paginationControls: {
     flexDirection: 'row',

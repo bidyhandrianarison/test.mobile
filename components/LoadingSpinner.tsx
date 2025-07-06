@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import Colors from '../constants/Colors';
 
 interface LoadingSpinnerProps {
@@ -8,30 +8,39 @@ interface LoadingSpinnerProps {
   color?: string;
 }
 
-export default function LoadingSpinner({ 
-  message = 'Chargement...', 
+/**
+ * LoadingSpinner component for consistent loading states
+ * 
+ * @param message - Optional message to display below the spinner
+ * @param size - Size of the activity indicator ('small' or 'large')
+ * @param color - Color of the spinner (defaults to app tint color)
+ */
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  message = 'Loading...',
   size = 'large',
-  color = Colors.light.tint
-}: LoadingSpinnerProps) {
+  color = Colors.light.tint,
+}) => {
   return (
     <View style={styles.container}>
       <ActivityIndicator size={size} color={color} />
-      {message && <Text style={styles.message}>{message}</Text>}
+      <Text style={styles.message}>{message}</Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    backgroundColor: Colors.light.background,
   },
   message: {
-    marginTop: 12,
+    marginTop: 16,
     fontSize: 16,
-    color: Colors.light.tabIconDefault,
+    color: Colors.light.text,
     textAlign: 'center',
   },
-}); 
+});
+
+export default LoadingSpinner; 

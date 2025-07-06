@@ -10,12 +10,25 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 
-// ✅ CORRECTION : Types de navigation spécifiques
+/**
+ * Navigation prop type for product detail screen
+ */
 type ProductDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+/**
+ * Route prop type for product detail screen
+ */
 type ProductDetailScreenRouteProp = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>['route'];
 
 /**
- * Écran de détail d'un produit avec navigation et gestion des actions
+ * ProductDetailScreenPage component displays detailed product information
+ * 
+ * Features:
+ * - Product details display
+ * - Edit and delete functionality for product owners
+ * - Permission-based access control
+ * - Loading and error states
+ * - Navigation back to previous screen
  */
 const ProductDetailScreenPage = () => {
   const navigation = useNavigation<ProductDetailScreenNavigationProp>();
@@ -24,52 +37,57 @@ const ProductDetailScreenPage = () => {
   const { products, deleteProduct, fetchProducts } = useProducts();
   const { user } = useAuth();
 
-  // Recherche du produit à afficher
+  // Find the product to display
   const product = products.find((p) => p.id === productId);
 
-  // Vérification des droits de modification
+  // Check modification permissions
   const canModify = product?.createdBy === user?.email;
 
-  // Gestion de la modification du produit
+  /**
+   * Handle product editing
+   * Navigates to edit screen if user has permission
+   */
   const handleEdit = () => {
     if (!product) return;
     
     if (!canModify) {
       Alert.alert(
-        'Action non autorisée',
-        'Vous ne pouvez modifier que vos propres produits.',
+        'Unauthorized Action',
+        'You can only modify your own products.',
         [{ text: 'OK' }]
       );
       return;
     }
 
-    // ✅ CORRECTION : Navigation typée vers l'écran d'édition
     navigation.navigate('ProductEdit', { productId: product.id });
   };
 
-  // Gestion de la suppression du produit
+  /**
+   * Handle product deletion
+   * Shows confirmation dialog and deletes if user has permission
+   */
   const handleDelete = () => {
     if (!product) return;
 
     if (!canModify) {
       Alert.alert(
-        'Action non autorisée',
-        'Vous ne pouvez supprimer que vos propres produits.',
+        'Unauthorized Action',
+        'You can only delete your own products.',
         [{ text: 'OK' }]
       );
       return;
     }
 
     Alert.alert(
-      'Confirmer la suppression',
-      `Êtes-vous sûr de vouloir supprimer "${product.name}" ?\n\nCette action est irréversible.`,
+      'Confirm Deletion',
+      `Are you sure you want to delete "${product.name}"?\n\nThis action cannot be undone.`,
       [
         {
-          text: 'Annuler',
+          text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Supprimer',
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -77,8 +95,8 @@ const ProductDetailScreenPage = () => {
               await fetchProducts();
               
               Alert.alert(
-                'Succès', 
-                'Produit supprimé avec succès',
+                'Success', 
+                'Product deleted successfully',
                 [
                   { 
                     text: 'OK', 
@@ -88,8 +106,8 @@ const ProductDetailScreenPage = () => {
               );
             } catch (error: any) {
               Alert.alert(
-                'Erreur', 
-                error.message || 'Impossible de supprimer le produit'
+                'Error', 
+                error.message || 'Unable to delete product'
               );
             }
           },
@@ -98,24 +116,25 @@ const ProductDetailScreenPage = () => {
     );
   };
 
-  // États de chargement et d'erreur
+  // Loading state
   if (!products.length) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <LoadingSpinner />
-        <Text style={styles.loadingText}>Chargement du produit...</Text>
+        <Text style={styles.loadingText}>Loading product...</Text>
       </SafeAreaView>
     );
   }
 
+  // Error state - product not found
   if (!product) {
     return (
       <SafeAreaView style={styles.errorContainer}>
         <View style={styles.errorContent}>
           <Feather name="alert-circle" size={64} color={Colors.light.tabIconDefault} />
-          <Text style={styles.errorTitle}>Produit introuvable</Text>
+          <Text style={styles.errorTitle}>Product Not Found</Text>
           <Text style={styles.errorSubtitle}>
-            Ce produit n'existe pas ou a été supprimé
+            This product doesn't exist or has been deleted
           </Text>
           <TouchableOpacity 
             style={styles.backButton} 
@@ -123,7 +142,7 @@ const ProductDetailScreenPage = () => {
             activeOpacity={0.8}
           >
             <Feather name="arrow-left" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.backButtonText}>Retour</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -146,14 +165,14 @@ const ProductDetailScreenPage = () => {
           onDelete={handleDelete}
         />
         
-        {/* Indicateur de permissions si l'utilisateur n'est pas propriétaire */}
+        {/* Permission indicator if user is not the owner */}
         {!canModify && product.createdBy && (
           <View style={styles.permissionIndicator}>
             <Feather name="info" size={16} color={Colors.light.tabIconDefault} />
             <Text style={styles.permissionText}>
-              Seul le créateur peut modifier ce produit
+              Only the creator can modify this product
             </Text>
-          </View>
+    </View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -200,50 +219,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.tabIconDefault,
     textAlign: 'center',
-    lineHeight: 24,
     marginBottom: 32,
+    lineHeight: 24,
   },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.tint,
-    borderRadius: 12,
-    paddingVertical: 14,
+    backgroundColor: '#2f95dc',
     paddingHorizontal: 24,
-    shadowColor: Colors.light.tint,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
   backButtonText: {
     color: '#fff',
-    fontWeight: '600',
     fontSize: 16,
-  },
-  permissionIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.light.tabIconDefault,
-  },
-  permissionText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: Colors.light.tabIconDefault,
-    flex: 1,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
+    flexGrow: 1,
+  },
+  permissionIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff3cd',
+    borderColor: '#ffeaa7',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginHorizontal: 16,
+    marginTop: 16,
+  },
+  permissionText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#856404',
   },
 });
 

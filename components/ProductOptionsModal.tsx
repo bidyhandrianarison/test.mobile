@@ -61,16 +61,16 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
       return;
     }
     // Navigation directe vers l'écran d'édition (toujours prioritaire)
-    try {
-      navigation.navigate('ProductEdit', { productId: product.id });
-    } catch (error) {
-      console.error('Erreur de navigation vers ProductEdit:', error);
-      Alert.alert(
-        'Erreur de navigation',
-        'Impossible d\'ouvrir l\'écran d\'édition. Vérifiez que l\'écran ProductEdit est bien configuré.',
-        [{ text: 'OK' }]
-      );
-    }
+      try {
+        navigation.navigate('ProductEdit', { productId: product.id });
+      } catch (error) {
+        console.error('Erreur de navigation vers ProductEdit:', error);
+        Alert.alert(
+          'Erreur de navigation',
+          'Impossible d\'ouvrir l\'écran d\'édition. Vérifiez que l\'écran ProductEdit est bien configuré.',
+          [{ text: 'OK' }]
+        );
+      }
     // Si une fonction onEdit est fournie, l'appeler en complément
     if (onEdit) {
       onEdit();

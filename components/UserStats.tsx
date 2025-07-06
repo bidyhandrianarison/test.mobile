@@ -7,14 +7,19 @@ import StatCard from './StatCard';
 import Colors from '../constants/Colors';
 
 /**
- * Composant affichant les statistiques des produits créés par l'utilisateur
- * ✅ CORRECTION : Mise à jour automatique lors des changements de produits
+ * UserStats component displays user's product statistics
+ * 
+ * Features:
+ * - Total product count with circular progress
+ * - Active/inactive product counts
+ * - Average price and total value
+ * - Category breakdown
+ * - Automatic updates when products change
  */
 const UserStats = () => {
-  const { products, getUserStats } = useProducts(); // ✅ AJOUT : getUserStats depuis le contexte
+  const { products, getUserStats } = useProducts();
   const { user } = useAuth();
 
-  // ✅ CORRECTION : Utilisation de getUserStats du contexte pour une cohérence parfaite
   const stats = useMemo(() => {
     if (!user) {
       return {
@@ -27,13 +32,11 @@ const UserStats = () => {
       };
     }
 
-    // Utilise la méthode du contexte pour garantir la cohérence
-    return getUserStats(user.email, user.name);
-  }, [products, user, getUserStats]); // ✅ IMPORTANT : Dépendance sur products pour re-calculer automatiquement
+    return getUserStats(user.email, user.name, user.id);
+  }, [products, user, getUserStats]);
 
-  // ✅ DEBUG : Log pour vérifier les mises à jour (à supprimer en production)
   useEffect(() => {
-    console.log('🔄 UserStats updated:', {
+    console.log('UserStats updated:', {
       totalProducts: products.length,
       userProducts: stats.totalCount,
       userEmail: user?.email
@@ -44,42 +47,42 @@ const UserStats = () => {
 
   return (
     <View style={styles.container}>
-      {/* Section principale avec cercle de progression */}
+      {/* Main section with progress circle */}
       <View style={styles.progressSection}>
         <Text style={styles.description}>
           {stats.totalCount > 0 
-            ? `Vous avez créé un total de ${stats.totalCount} produit${stats.totalCount > 1 ? 's' : ''}`
-            : "Vous n'avez créé aucun produit pour le moment"
+            ? `You have created a total of ${stats.totalCount} product${stats.totalCount > 1 ? 's' : ''}`
+            : "You haven't created any products yet"
           }
         </Text>
         
         <CircleStats
           value={stats.totalCount}
-          label="Produits"
+          label="Products"
           color={Colors.light.tint}
           size={140}
         />
         
-        {/* Valeur totale de l'inventaire */}
+        {/* Total inventory value */}
         {stats.totalCount > 0 && (
           <Text style={styles.totalValue}>
-            Valeur totale: {stats.totalValue.toFixed(2)} €
+            Total value: {stats.totalValue.toFixed(2)} €
           </Text>
         )}
       </View>
 
-      {/* Statistiques détaillées */}
+      {/* Detailed statistics */}
       {stats.totalCount > 0 && (
         <>
           <View style={styles.statsRow}>
             <StatCard
-              title="Produits Actifs"
+              title="Active Products"
               value={stats.activeCount}
               iconName="checkmark-circle"
               color="#4CAF50"
             />
             <StatCard
-              title="Produits Inactifs"
+              title="Inactive Products"
               value={stats.inactiveCount}
               iconName="close-circle"
               color="#FF6B6B"
@@ -88,23 +91,23 @@ const UserStats = () => {
 
           <View style={styles.statsRow}>
             <StatCard
-              title="Prix moyen"
+              title="Average Price"
               value={`${stats.averagePrice.toFixed(2)} €`}
               iconName="trending-up"
               color="#FF9800"
             />
             <StatCard
-              title="Catégories"
+              title="Categories"
               value={stats.categories.length}
               iconName="grid"
               color="#9C27B0"
             />
           </View>
 
-          {/* Section des catégories */}
+          {/* Categories section */}
           {stats.categories.length > 0 && (
             <View style={styles.categoriesSection}>
-              <Text style={styles.categoriesTitle}>Vos catégories:</Text>
+              <Text style={styles.categoriesTitle}>Your categories:</Text>
               <View style={styles.categoriesContainer}>
                 {stats.categories.map((category, index) => (
                   <View key={index} style={styles.categoryChip}>
@@ -117,11 +120,11 @@ const UserStats = () => {
         </>
       )}
 
-      {/* État vide avec encouragement */}
+      {/* Empty state with encouragement */}
       {stats.totalCount === 0 && (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            Commencez par ajouter votre premier produit pour voir vos statistiques !
+            Start by adding your first product to see your statistics!
           </Text>
         </View>
       )}

@@ -128,10 +128,14 @@ const TabNavigator = () => {
 const FloatingActionButton = () => {
   const navigation = useNavigation();
   
+  const handleAddProduct = () => {
+    navigation.navigate('AddProduct' as never);
+  };
+
   return (
     <Pressable 
-      style={({ pressed }) => [styles.fab, pressed && { opacity: 0.7 }]}
-      onPress={() => navigation.navigate('AddProduct' as never)}
+      style={styles.fab}
+      onPress={handleAddProduct}
     >
       <Ionicons name="add" size={32} color="#fff" />
     </Pressable>

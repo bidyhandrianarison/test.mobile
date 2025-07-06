@@ -57,7 +57,7 @@ const ProductEditScreen = () => {
         stock: String(product.stock),
         category: product.category,
         vendeurs: product.vendeurs,
-        image: product.image,
+        image: product.image ?? '',
         isActive: product.isActive,
       });
     }
@@ -139,7 +139,7 @@ const ProductEditScreen = () => {
             bounces={false}
           >
             <View style={styles.header}>
-              <Text style={styles.title}>Modifier le produit</Text>
+      <Text style={styles.title}>Modifier le produit</Text>
               <Text style={styles.subtitle}>Modifiez les informations de votre produit</Text>
             </View>
 
@@ -282,7 +282,7 @@ const ProductEditScreen = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+    </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
