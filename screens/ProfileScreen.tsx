@@ -18,6 +18,7 @@ import UserStats from '../components/UserStats';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
+import { t } from '../utils/translations';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -62,10 +63,10 @@ const ProfileScreen = () => {
     ]).start();
 
     // Afficher la confirmation
-    Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('profile.logout'), t('profile.logoutConfirm'), [
+      { text: t('profile.cancel'), style: 'cancel' },
       {
-        text: 'Se déconnecter', 
+        text: t('profile.logout'), 
         style: 'destructive', 
         onPress: async () => {
           await logout();
@@ -105,7 +106,7 @@ const ProfileScreen = () => {
               style={styles.logoutIconButton} 
               onPress={handleLogoutPress}
               activeOpacity={0.8}
-              accessibilityLabel="Se déconnecter"
+              accessibilityLabel={t('profile.logout')}
             >
               <Feather name="log-out" size={20} color="#E53935" />
             </TouchableOpacity>
@@ -116,7 +117,7 @@ const ProfileScreen = () => {
             style={styles.editButton} 
             onPress={handleEditProfile}
             activeOpacity={0.8}
-            accessibilityLabel="Modifier le profil"
+            accessibilityLabel={t('profile.editProfile')}
           >
             <Ionicons name="create-outline" size={24} color={Colors.light.background} />
           </TouchableOpacity>

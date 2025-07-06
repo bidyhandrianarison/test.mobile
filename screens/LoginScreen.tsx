@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../types/navigation';
+import { t } from '../utils/translations';
 
 /**
  * Navigation prop type for the login screen

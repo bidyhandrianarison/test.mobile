@@ -9,10 +9,12 @@ import {
   Animated,
   Dimensions,
   Platform,
+  Alert,
 } from 'react-native';
 import { Feather, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { Product } from '../types/Product';
 import Colors from '../constants/Colors';
+import { t } from '../utils/translations';
 
 // Props du composant
 interface ProductDetailScreenProps {
@@ -69,6 +71,21 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
 
   const statusConfig = getStatusConfig();
 
+  const handleEdit = () => {
+    onEdit(product);
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      t('common.confirm'),
+      t('products.deleteConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: () => onDelete(product.id) }
+      ]
+    );
+  };
+
   return (
     <Animated.View 
       style={[
@@ -110,8 +127,16 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
               </Text>
             </View>
 
+            {/* Status badge */}
+            {!product.isActive && (
+              <View style={styles.inactiveBadge}>
+                <Feather name="alert-triangle" size={16} color="#fff" />
+                <Text style={styles.inactiveText}>{t('status.inactive')}</Text>
+              </View>
+            )}
+
             {/* Overlay inactif */}
-            {isInactive && (
+            {!product.isActive && (
               <View style={styles.inactiveOverlay}>
                 <Feather name="pause-circle" size={48} color="rgba(255,255,255,0.8)" />
               </View>
@@ -136,7 +161,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
               <FontAwesome5 name="store" size={16} color={Colors.light.tint} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Vendeur</Text>
+              <Text style={styles.detailLabel}>{t('productForm.seller')}</Text>
               <Text style={styles.detailValue}>{product.vendeurs}</Text>
             </View>
           </View>
@@ -147,7 +172,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
               <Feather name="tag" size={16} color={Colors.light.tint} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Catégorie</Text>
+              <Text style={styles.detailLabel}>{t('productForm.category')}</Text>
               <Text style={styles.detailValue}>{product.category}</Text>
             </View>
           </View>
@@ -158,12 +183,12 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
               <Feather name="box" size={16} color={isLowStock ? '#FF9800' : Colors.light.tint} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Stock disponible</Text>
+              <Text style={styles.detailLabel}>{t('productForm.stock')}</Text>
               <Text style={[
                 styles.detailValue,
                 isLowStock && { color: '#FF9800', fontWeight: 'bold' }
               ]}>
-                {product.stock} {product.stock > 1 ? 'unités' : 'unité'}
+                {product.stock} {t('products.units')}
               </Text>
             </View>
           </View>
@@ -197,7 +222,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
             {product.createdBy && (
               <View style={styles.metaRow}>
                 <Feather name="user" size={14} color={Colors.light.tabIconDefault} />
-                <Text style={styles.metaText}>Créé par : {product.createdBy}</Text>
+                <Text style={styles.metaText}>{t('products.createdBy')}: {product.createdBy || t('common.unknown')}</Text>
               </View>
             )}
             
@@ -205,7 +230,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
               <View style={styles.metaRow}>
                 <Feather name="calendar" size={14} color={Colors.light.tabIconDefault} />
                 <Text style={styles.metaText}>
-                  Créé le : {new Date(product.createdAt).toLocaleDateString('fr-FR')}
+                  {t('products.createdAt')}: {new Date(product.createdAt).toLocaleDateString('fr-FR')}
                 </Text>
               </View>
             )}
@@ -220,20 +245,20 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onEd
       <View style={styles.actionButtons}>
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => onEdit && onEdit(product)}
+          onPress={handleEdit}
           activeOpacity={0.8}
         >
           <Feather name="edit-2" size={20} color="#fff" />
-          <Text style={styles.editButtonText}>Modifier</Text>
+          <Text style={styles.editButtonText}>{t('status.edit')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => onDelete && onDelete(product)}
+          onPress={handleDelete}
           activeOpacity={0.8}
         >
           <MaterialIcons name="delete-outline" size={22} color="#fff" />
-          <Text style={styles.deleteButtonText}>Supprimer</Text>
+          <Text style={styles.deleteButtonText}>{t('status.delete')}</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -317,6 +342,28 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   statusBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  inactiveBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF6B6B',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  inactiveText: {
+    color: '#fff',
     fontSize: 12,
     fontWeight: '600',
   },

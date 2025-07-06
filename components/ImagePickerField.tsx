@@ -3,6 +3,7 @@ import { View, Image, TouchableOpacity, Text, StyleSheet, Alert } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import Colors from '../constants/Colors';
+import { t } from '../utils/translations';
 
 interface ImagePickerFieldProps {
   value: string;
@@ -12,25 +13,32 @@ interface ImagePickerFieldProps {
 }
 
 export default function ImagePickerField({ value, onChange, label = 'Image', required }: ImagePickerFieldProps) {
-  // Ouvre la galerie et met à jour l'image
-  const handlePickImage = async () => {
+  const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission requise', "Autorisez l'accès à la galerie pour choisir une image.");
-      return;
+      Alert.alert(t('errors.permissionRequired'), t('errors.galleryPermission'));
+      return false;
     }
+    return true;
+  };
+
+  const pickImage = async () => {
+    const hasPermission = await requestPermission();
+    if (!hasPermission) return;
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.7,
+      quality: 0.8,
     });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
+
+    if (!result.canceled && result.assets[0]) {
       onChange(result.assets[0].uri);
     }
   };
 
-  const handleRemoveImage = () => {
+  const removeImage = () => {
     onChange('');
   };
 
@@ -38,23 +46,23 @@ export default function ImagePickerField({ value, onChange, label = 'Image', req
     <View style={styles.imageUploadBlock}>
       {label && (
         <Text style={styles.label}>
-          {label} {required && <Text style={{ color: '#e53935' }}>*</Text>}
+          {label} {required && <Text style={styles.required}>*</Text>}
         </Text>
       )}
       {value ? (
         <View style={styles.imagePreviewWrapper}>
           <Image source={{ uri: value }} style={styles.imagePreview} />
-          <TouchableOpacity style={styles.imageEditBtn} onPress={handlePickImage}>
+          <TouchableOpacity style={styles.imageEditBtn} onPress={pickImage}>
             <Ionicons name="camera" size={22} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.imageRemoveBtn} onPress={handleRemoveImage}>
+          <TouchableOpacity style={styles.imageRemoveBtn} onPress={removeImage}>
             <Ionicons name="close-circle" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity style={styles.imagePickerBtn} onPress={handlePickImage}>
+        <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImage}>
           <Ionicons name="camera" size={28} color={Colors.light.tint} />
-          <Text style={styles.imagePickerBtnText}>Choisir une image</Text>
+          <Text style={styles.imagePickerBtnText}>{t('productForm.selectImage')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -122,5 +130,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     marginLeft: 10,
+  },
+  required: {
+    color: '#e53935',
   },
 });

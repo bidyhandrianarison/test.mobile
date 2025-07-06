@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import CircleStats from './CircleStats';
 import StatCard from './StatCard';
 import Colors from '../constants/Colors';
+import { t, pluralize } from '../utils/translations';
 
 /**
  * UserStats component displays user's product statistics

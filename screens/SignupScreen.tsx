@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../types/navigation';
+import { t } from '../utils/translations';
 
 /**
  * Navigation prop type for the signup screen
@@ -306,11 +307,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 8,
   },
-  loginRow: {
+  footer: {
     marginTop: 24,
     alignItems: 'center',
   },
-  loginText: {
+  footerText: {
     fontSize: 14,
     color: '#333',
   },

@@ -10,7 +10,6 @@ import { Ionicons } from '@expo/vector-icons';
 import FilterModal, { FiltersState } from '../components/FilterModal';
 import Colors from '../constants/Colors';
 import LoadingSpinner from '../components/LoadingSpinner';
-import FloatingActionButton from '../components/FloatingActionButton';
 import ProductItem from '../components/ProductItem';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -152,10 +151,6 @@ const HomeScreen = () => {
     navigation.navigate('ProductDetail', { productId: product.id });
   };
 
-  const handleAddProduct = () => {
-    navigation.navigate('AddProduct');
-  };
-
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
@@ -168,30 +163,26 @@ const HomeScreen = () => {
     }
   };
 
-  // ✅ MODIFIÉ : Utiliser sortedProducts pour les filtres (catégories/vendeurs)
-  const categories = Array.from(new Set(sortedProducts.map(p => p.category)));
-  const sellers = Array.from(new Set(sortedProducts.map(p => p.vendeurs)));
-
   // Header Component pour la FlatList
   const renderHeader = () => (
     <>
       {/* Section info */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Tous les produits</Text>
+        <Text style={styles.sectionTitle}>{t('products.allProducts')}</Text>
         {search.trim().length > 0 && (
           <Text style={styles.searchResultText}>
-            Résultats pour "{search}"
+            {t('search.searchResults')} "{search}"
           </Text>
         )}
         {/* ✅ NOUVEAU : Indicateur des filtres actifs */}
         {hasActiveFilters && (
           <Text style={styles.activeFiltersIndicator}>
-            {activeFiltersCount} filtre{activeFiltersCount > 1 ? 's' : ''} appliqué{activeFiltersCount > 1 ? 's' : ''}
+            {activeFiltersCount} {pluralize(t('search.activeFilters'), t('search.activeFiltersPlural'), activeFiltersCount)}
           </Text>
         )}
         {totalPages > 1 && (
           <Text style={styles.pageIndicator}>
-            Page {currentPage} sur {totalPages}
+            {t('pagination.page')} {currentPage} {t('pagination.of')} {totalPages}
           </Text>
         )}
       </View>
@@ -217,7 +208,7 @@ const HomeScreen = () => {
               styles.prevNextText,
               currentPage === 1 && styles.disabledText
             ]}>
-              Précédent
+              {t('pagination.previous')}
             </Text>
           </TouchableOpacity>
 
@@ -237,7 +228,7 @@ const HomeScreen = () => {
               styles.prevNextText,
               currentPage === totalPages && styles.disabledText
             ]}>
-              Suivant
+              {t('pagination.next')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -254,8 +245,8 @@ const HomeScreen = () => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <Text style={styles.welcomeText}>Bienvenue</Text>
-          <Text style={styles.headerTitle}>Découvrez nos produits</Text>
+          <Text style={styles.welcomeText}>{t('profile.welcome')}</Text>
+          <Text style={styles.headerTitle}>{t('profile.discoverProducts')}</Text>
         </LinearGradient>
         <LoadingSpinner />
       </View>
@@ -271,8 +262,8 @@ const HomeScreen = () => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <Text style={styles.welcomeText}>Bienvenue</Text>
-        <Text style={styles.headerTitle}>Découvrez nos produits</Text>
+        <Text style={styles.welcomeText}>{t('profile.welcome')}</Text>
+        <Text style={styles.headerTitle}>{t('profile.discoverProducts')}</Text>
         
         {/* ✅ DÉPLACÉ : Barre de recherche et filtre dans le header bleu */}
       <View style={styles.searchRow}>

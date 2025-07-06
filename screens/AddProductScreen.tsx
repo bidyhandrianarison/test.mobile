@@ -8,6 +8,8 @@ import Colors from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import ImagePickerField from '../components/ImagePickerField';
 import { Product } from '../types/Product';
+import { Button } from 'react-native-elements';
+import { t } from '../utils/translations';
 
 const CATEGORIES = [
   'Informatique', 'Sport', 'Beauté', 'Maison', 'Vêtements', 'Électronique', 'Jouets', 'Livres'
@@ -34,42 +36,43 @@ const AddProductScreen = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
 
-  // Validation simple
+  // Validation
   const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!form.name) newErrors.name = 'Nom requis';
-    if (!form.description) newErrors.description = 'Description requise';
-    if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0) newErrors.price = 'Prix invalide';
-    if (!form.stock || isNaN(Number(form.stock)) || Number(form.stock) < 0) newErrors.stock = 'Stock invalide';
-    if (!form.category) newErrors.category = 'Catégorie requise';
-    if (!form.vendeurs) newErrors.vendeurs = 'Vendeur requis';
-    if (!form.image) newErrors.image = "Image requise (URL)";
-    return newErrors;
+    const newErrors: any = {};
+    if (!form.name.trim()) newErrors.name = t('validation.nameRequired');
+    if (!form.description.trim()) newErrors.description = t('validation.descriptionRequired');
+    if (!form.price || parseFloat(form.price) <= 0) newErrors.price = t('validation.priceRequired');
+    if (!form.stock || parseInt(form.stock) < 0) newErrors.stock = t('validation.stockRequired');
+    if (!form.image) newErrors.image = t('validation.imageRequired');
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return false;
+    }
+    return true;
   };
 
   // Gestion de la soumission
   const handleSubmit = async () => {
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    if (!validate()) return;
+    
     setLoading(true);
     try {
       await addProduct({
         name: form.name,
         description: form.description,
-        price: Number(form.price),
-        stock: Number(form.stock),
+        price: parseFloat(form.price),
+        stock: parseInt(form.stock),
         category: form.category,
         vendeurs: form.vendeurs,
         image: form.image,
         isActive: true,
       }, user?.email, user?.id);
       
-      Alert.alert('Succès', 'Produit ajouté avec succès', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
-    } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ajouter le produit");
+      Alert.alert(t('common.success'), t('products.productAdded'));
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert(t('common.error'), t('errors.addProductError'));
     } finally {
       setLoading(false);
     }
@@ -77,7 +80,7 @@ const AddProductScreen = () => {
 
   // Pour le menu déroulant (catégorie/vendeur)
   const renderPicker = (label: string, value: string, options: string[], onChange: (v: string) => void, error?: string) => (
-    <View style={styles.formGroup}>
+    <View style={styles.form}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.pickerWrapper}>
         {options.map(opt => (
@@ -102,70 +105,90 @@ const AddProductScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Ajouter un produit</Text>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Nom</Text>
+      <Text style={styles.title}>{t('productForm.addProduct')}</Text>
+      <View style={styles.form}>
         <FormInput
-          label="Nom du produit"
+          label={t('productForm.productName')}
           labelValue={form.name}
-          handleChange={text => setForm(f => ({ ...f, name: text }))}
+          icon="pricetag"
+          handleChange={(text) => setForm({ ...form, name: text })}
+          placeholder={t('productForm.productName')}
         />
         {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-      </View>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Description</Text>
+
         <FormInput
-          label="Description"
+          label={t('productForm.productDescription')}
           labelValue={form.description}
-          handleChange={text => setForm(f => ({ ...f, description: text }))}
+          icon="document-text"
+          handleChange={(text) => setForm({ ...form, description: text })}
+          placeholder={t('productForm.productDescription')}
+          multiline
+          numberOfLines={3}
         />
         {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+
+        <FormInput
+          label={t('productForm.price')}
+          labelValue={form.price}
+          icon="cash"
+          handleChange={(text) => setForm({ ...form, price: text })}
+          keyboardType="decimal-pad"
+        />
+        {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+
+        <FormInput
+          label={t('productForm.stock')}
+          labelValue={form.stock}
+          icon="cube"
+          handleChange={(text) => setForm({ ...form, stock: text })}
+          keyboardType="number-pad"
+        />
+        {errors.stock && <Text style={styles.errorText}>{errors.stock}</Text>}
+
+        <FormInput
+          label={t('productForm.category')}
+          labelValue={form.category}
+          icon="grid"
+          handleChange={(text) => setForm({ ...form, category: text })}
+          placeholder={t('productForm.category')}
+        />
+        {errors.category && <Text style={styles.errorText}>{errors.category}</Text>}
+
+        <FormInput
+          label={t('productForm.seller')}
+          labelValue={form.vendeurs}
+          icon="person"
+          handleChange={(text) => setForm({ ...form, vendeurs: text })}
+          placeholder={t('productForm.seller')}
+        />
+        {errors.vendeurs && <Text style={styles.errorText}>{errors.vendeurs}</Text>}
+
+        <FormInput
+          label={t('productForm.productImage')}
+          labelValue={form.image}
+          icon="image"
+          handleChange={(text) => setForm({ ...form, image: text })}
+          placeholder="URL de l'image"
+        />
+        {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
+
+        <Button
+          title={t('productForm.addProduct')}
+          onPress={handleSubmit}
+          loading={loading}
+          buttonStyle={styles.submitButton}
+          titleStyle={{ fontWeight: '600' }}
+          icon={
+            <Ionicons name="add-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+          }
+        />
       </View>
-      <View style={styles.row}>
-        <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}> 
-          <Text style={styles.label}>Prix (€)</Text>
-          <FormInput
-            label="Prix"
-            labelValue={form.price}
-            handleChange={text => setForm(f => ({ ...f, price: text }))}
-            keyboardType="decimal-pad"
-          />
-          {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
-        </View>
-        <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}> 
-          <Text style={styles.label}>Stock</Text>
-          <FormInput
-            label="Stock"
-            labelValue={form.stock}
-            handleChange={text => setForm(f => ({ ...f, stock: text }))}
-            keyboardType="number-pad"
-          />
-          {errors.stock && <Text style={styles.errorText}>{errors.stock}</Text>}
-        </View>
-    </View>
-      {renderPicker('Catégorie', form.category, CATEGORIES, v => setForm(f => ({ ...f, category: v })), errors.category)}
-      {renderPicker('Vendeur', form.vendeurs, VENDEURS, v => setForm(f => ({ ...f, vendeurs: v })), errors.vendeurs)}
-      <ImagePickerField
-        value={form.image}
-        onChange={uri => setForm(f => ({ ...f, image: uri }))}
-        label="Image du produit"
-        required
-      />
-      <TouchableOpacity
-        style={styles.saveBtn}
-        onPress={handleSubmit}
-        disabled={loading}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="add-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-        <Text style={styles.saveBtnText}>{loading ? 'Ajout...' : 'Ajouter'}</Text>
-      </TouchableOpacity>
       <TouchableOpacity
         style={styles.cancelBtn}
         onPress={() => navigation.goBack()}
         activeOpacity={0.7}
       >
-        <Text style={styles.cancelBtnText}>Annuler</Text>
+        <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -184,7 +207,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     alignSelf: 'center',
   },
-  formGroup: {
+  form: {
     marginBottom: 16,
   },
   label: {
@@ -197,10 +220,6 @@ const styles = StyleSheet.create({
     color: '#e53935',
     fontSize: 13,
     marginTop: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    marginBottom: 8,
   },
   pickerWrapper: {
     flexDirection: 'row',
@@ -226,7 +245,7 @@ const styles = StyleSheet.create({
   pickerChipTextSelected: {
     color: '#fff',
   },
-  saveBtn: {
+  submitButton: {
     backgroundColor: Colors.light.tint,
     borderRadius: 12,
     paddingVertical: 14,
@@ -237,11 +256,6 @@ const styles = StyleSheet.create({
     marginTop: 18,
     marginBottom: 8,
     elevation: 2,
-  },
-  saveBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
   cancelBtn: {
     backgroundColor: Colors.light.tabIconDefault,

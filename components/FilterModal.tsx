@@ -11,6 +11,7 @@ import {
 import Modal from 'react-native-modal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
+import { t } from '../utils/translations';
 
 export type FiltersState = {
   category: string | null;

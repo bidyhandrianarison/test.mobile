@@ -2,6 +2,7 @@ import React, { createContext, useReducer, useEffect, useContext, ReactNode } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mockUsers } from '../constants/users';
 import { registerUser, loginUser, updateUser } from '@/services/authService';
+import { t } from '../utils/translations';
 
 /**
  * User data structure for authentication
@@ -18,11 +19,12 @@ export type AuthUser = {
 export type AuthContextType = {
   user: AuthUser | null;
   isLoading: boolean;
-  error: string | null;
+  error: AuthError | null;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateProfile: (updatedData: Partial<AuthUser>) => Promise<void>;
+  clearError: () => void;
   /**
    * Vérifie si un utilisateur est connecté (AsyncStorage ou state)
    * Met à jour le state si besoin, retourne true/false
@@ -42,7 +44,8 @@ type UserAction =
   | { type: 'SIGNUP', payload: AuthUser[] }
   | { type: 'LOGOUT' }
   | { type: 'SET_LOADING', payload: boolean }
-  | { type: 'SET_ERROR', payload: string | null }
+  | { type: 'SET_ERROR', payload: AuthError | null }
+  | { type: 'CLEAR_ERROR' }
   | { type: 'UPDATE_USER', payload: Partial<AuthUser> }
 
 /**
@@ -51,7 +54,7 @@ type UserAction =
 type AuthState = {
   user: AuthUser | null;
   isLoading: boolean;
-  error: string | null;
+  error: AuthError | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,15 +68,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const authReducer = (state: AuthState, action: UserAction): AuthState => {
   switch (action.type) {
     case 'LOGIN':
-      return { ...state, user: action.payload, isLoading: false };
+      return { ...state, user: action.payload, isLoading: false, error: null };
     case 'SIGNUP':
       return state;
     case 'LOGOUT':
-      return { ...state, user: null, isLoading: false };
+      return { ...state, user: null, isLoading: false, error: null };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_ERROR':
-      return { ...state, error: action.payload };
+      return { ...state, error: action.payload, isLoading: false };
+    case 'CLEAR_ERROR':
+      return { ...state, error: null };
     case 'UPDATE_USER':
       if (!state.user) return state;
       const updatedUser = { ...state.user, ...action.payload };
@@ -115,21 +120,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * @returns Promise<boolean> - True if user is authenticated
    */
   const checkAuth = async (): Promise<boolean> => {
-      try {
-        const userJSON = await AsyncStorage.getItem('user');
-        if (userJSON) {
+    try {
+      const userJSON = await AsyncStorage.getItem('user');
+      if (userJSON) {
         const user = JSON.parse(userJSON);
         dispatch({ type: 'LOGIN', payload: user });
         return true;
-        } else {
+      } else {
         dispatch({ type: 'LOGOUT' });
         return false;
-        }
-      } catch (e) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to check auth.' });
-      return false;
       }
-    };
+    } catch (error) {
+      const normalizedError = normalizeError(error, 'checkAuth');
+      dispatch({ type: 'SET_ERROR', payload: normalizedError });
+      return false;
+    }
+  };
+
+  /**
+   * Clear the current error state
+   */
+  const clearError = () => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  };
 
   /**
    * Objet du contexte d'authentification
@@ -153,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login: async (email, password) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
+      
       try {
         console.log('AuthContext - Login attempt:', email);
         const user = await loginUser(email, password);
@@ -184,19 +198,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * @returns Promise<boolean> - True if registration successful
      */
     signup: async (name, email, password) => {
-        dispatch({ type: 'SET_LOADING', payload: true });
-        dispatch({ type: 'SET_ERROR', payload: null });
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      
       try {
         await registerUser(email, name, password);
         // Optional: automatic login after registration
         const user = await loginUser(email, password);
-        const userData = { id: user.id || String(Date.now()), name: user.name || '', email: user.email };
+        const userData = { 
+          id: user.id || String(Date.now()), 
+          name: user.name || name, 
+          email: user.email 
+        };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         dispatch({ type: 'LOGIN', payload: userData });
         return true;
-      } catch (e: any) {
-        dispatch({ type: 'SET_ERROR', payload: e.message });
-        dispatch({ type: 'SET_LOADING', payload: false });
+      } catch (error) {
+        console.error('AuthContext - Signup error:', error);
+        const normalizedError = normalizeError(error, 'signup');
+        dispatch({ type: 'SET_ERROR', payload: normalizedError });
         return false;
       }
     },
@@ -205,16 +225,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      */
     logout: async () => {
       dispatch({ type: 'SET_LOADING', payload: true });
-      await AsyncStorage.removeItem('user');
-      dispatch({ type: 'LOGOUT' });
+      try {
+        await AsyncStorage.removeItem('user');
+        dispatch({ type: 'LOGOUT' });
+      } catch (error) {
+        console.error('AuthContext - Logout error:', error);
+        const normalizedError = normalizeError(error, 'logout');
+        dispatch({ type: 'SET_ERROR', payload: normalizedError });
+        // Still logout even if storage fails
+        dispatch({ type: 'LOGOUT' });
+      }
     },
     /**
      * Update user profile (persists to AsyncStorage and state)
      * @param updatedData - Partial user data to update
      */
     updateProfile: async (updatedData) => {
-        dispatch({ type: 'SET_LOADING', payload: true });
-        await new Promise(resolve => setTimeout(resolve, 500));
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      
+      try {
         const currentUser = state.user;
       if (!currentUser) return;
       
@@ -222,6 +252,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await AsyncStorage.setItem('user', JSON.stringify(updated));
         dispatch({ type: 'UPDATE_USER', payload: updatedData });
         dispatch({ type: 'SET_LOADING', payload: false });
+      } catch (error) {
+        console.error('AuthContext - Update profile error:', error);
+        const normalizedError = normalizeError(error, 'updateProfile');
+        dispatch({ type: 'SET_ERROR', payload: normalizedError });
+        // No throw here
+      }
     }
   };
 

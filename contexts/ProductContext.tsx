@@ -109,7 +109,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
       
       dispatch({ type: 'SET_PRODUCTS', payload: normalizedProducts });
     } catch (e) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch products.' });
+      dispatch({ type: 'SET_ERROR', payload: 'Impossible de récupérer les produits.' });
     }
   };
 
