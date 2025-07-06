@@ -13,7 +13,7 @@ interface ImagePickerFieldProps {
 }
 
 export default function ImagePickerField({ value, onChange, label = 'Image', required }: ImagePickerFieldProps) {
-  const requestPermission = async () => {
+  const requestGalleryPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(t('errors.permissionRequired'), t('errors.galleryPermission'));
@@ -22,8 +22,17 @@ export default function ImagePickerField({ value, onChange, label = 'Image', req
     return true;
   };
 
-  const pickImage = async () => {
-    const hasPermission = await requestPermission();
+  const requestCameraPermission = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('errors.permissionRequired'), t('errors.cameraPermission'));
+      return false;
+    }
+    return true;
+  };
+
+  const pickImageFromGallery = async () => {
+    const hasPermission = await requestGalleryPermission();
     if (!hasPermission) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -38,8 +47,59 @@ export default function ImagePickerField({ value, onChange, label = 'Image', req
     }
   };
 
+  const takePhoto = async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      onChange(result.assets[0].uri);
+    }
+  };
+
+  const showImagePickerOptions = () => {
+    Alert.alert(
+      t('productForm.selectImageSource'),
+      t('productForm.chooseImageSource'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('productForm.camera'),
+          onPress: takePhoto,
+        },
+        {
+          text: t('productForm.gallery'),
+          onPress: pickImageFromGallery,
+        },
+      ]
+    );
+  };
+
   const removeImage = () => {
-    onChange('');
+    Alert.alert(
+      t('common.confirm'),
+      t('productForm.confirmRemoveImage'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.remove'),
+          style: 'destructive',
+          onPress: () => onChange(''),
+        },
+      ]
+    );
   };
 
   return (
@@ -52,7 +112,7 @@ export default function ImagePickerField({ value, onChange, label = 'Image', req
       {value ? (
         <View style={styles.imagePreviewWrapper}>
           <Image source={{ uri: value }} style={styles.imagePreview} />
-          <TouchableOpacity style={styles.imageEditBtn} onPress={pickImage}>
+          <TouchableOpacity style={styles.imageEditBtn} onPress={showImagePickerOptions}>
             <Ionicons name="camera" size={22} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.imageRemoveBtn} onPress={removeImage}>
@@ -60,7 +120,7 @@ export default function ImagePickerField({ value, onChange, label = 'Image', req
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImage}>
+        <TouchableOpacity style={styles.imagePickerBtn} onPress={showImagePickerOptions}>
           <Ionicons name="camera" size={28} color={Colors.light.tint} />
           <Text style={styles.imagePickerBtnText}>{t('productForm.selectImage')}</Text>
         </TouchableOpacity>

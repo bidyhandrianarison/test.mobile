@@ -53,6 +53,7 @@ export const translations = {
     updateProductError: 'Impossible de mettre à jour le produit',
     permissionRequired: 'Permission requise',
     galleryPermission: 'Autorisez l\'accès à la galerie pour choisir une image.',
+    cameraPermission: 'Autorisez l\'accès à l\'appareil photo pour prendre une photo.',
   },
 
   // Navigation
@@ -111,6 +112,11 @@ export const translations = {
     seller: 'Vendeur',
     productImage: 'Image du produit',
     selectImage: 'Sélectionner une image',
+    selectImageSource: 'Sélectionner la source d\'image',
+    chooseImageSource: 'Choisissez comment ajouter une image',
+    camera: 'Appareil photo',
+    gallery: 'Galerie',
+    confirmRemoveImage: 'Êtes-vous sûr de vouloir supprimer cette image ?',
     addProduct: 'Ajouter un produit',
     saveChanges: 'Enregistrer les modifications',
   },
@@ -175,6 +181,9 @@ export const translations = {
     no: 'Non',
     retry: 'Réessayer',
     unknown: 'Inconnu',
+    cancel: 'Annuler',
+    confirm: 'Confirmer',
+    remove: 'Supprimer',
   },
 };
 

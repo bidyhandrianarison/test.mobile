@@ -163,12 +163,11 @@ const AddProductScreen = () => {
         />
         {errors.vendeurs && <Text style={styles.errorText}>{errors.vendeurs}</Text>}
 
-        <FormInput
+        <ImagePickerField
+          value={form.image}
+          onChange={(uri) => setForm({ ...form, image: uri })}
           label={t('productForm.productImage')}
-          labelValue={form.image}
-          icon="image"
-          handleChange={(text) => setForm({ ...form, image: text })}
-          placeholder="URL de l'image"
+          required
         />
         {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
 

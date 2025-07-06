@@ -5,7 +5,7 @@ import FormInput from '../components/FormInput';
 import ErrorMessage from '../components/ErrorMessage';
 import FormFieldError from '../components/FormFieldError';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { validateEmail, validatePassword } from '../utils/validation';
+import { validateEmail, validatePassword } from '../utils/validations';
 import { mapAuthError, clearErrorsOnInput } from '../utils/errorHandling';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';

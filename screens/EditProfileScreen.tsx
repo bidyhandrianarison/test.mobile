@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { validateProfileForm } from '../utils/validation';
+import { validateProfileForm } from '../utils/validations';
 import ProfileEditForm from '../components/ProfileEditForm';
 import { useNavigation } from '@react-navigation/native';
 

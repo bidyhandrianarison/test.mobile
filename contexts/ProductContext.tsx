@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useContext, useEffect, ReactNode } from 'react';
-import mockProducts from '../constants/products.json';
+import mockProducts from '../data/products.json';
 import { useAuth } from './AuthContext';
 import { Product, CreateProductData, UpdateProductData, UserStats } from '../types/Product';
 

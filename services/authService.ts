@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { mockUsers } from "@/constants/users";
+import { mockUsers } from "../data/users";
 
 const USERS_KEY = 'USERS';
 

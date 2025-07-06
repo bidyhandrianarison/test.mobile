@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import mockData from '../constants/products.json';
+import mockData from '../data/products.json';
 import { Product } from '../types/Product';
 
 const PRODUCTS_KEY = 'PRODUCTS';

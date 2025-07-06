@@ -1,7 +1,7 @@
 import React, { createContext, useReducer, useEffect, useContext, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { mockUsers } from '../constants/users';
-import { registerUser, loginUser, updateUser } from '@/services/authService';
+import { mockUsers } from '../data/users';
+import { registerUser, loginUser, updateUser } from '../services/authService';
 import { t } from '../utils/translations';
 
 /**

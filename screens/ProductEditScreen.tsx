@@ -17,7 +17,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { useProducts } from '../contexts/ProductContext';
 import { Product } from '../types/Product';
 import { Feather } from '@expo/vector-icons';
-import { validateProductForm } from '../utils/validation';
+import { validateProductForm } from '../utils/validations';
 import ImagePickerField from '../components/ImagePickerField';
 import Colors from '../constants/Colors';
 

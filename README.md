@@ -1,384 +1,440 @@
-# Product Catalog App
+# 📱 Application de Gestion de Catalogue Produits
 
-A modern React Native mobile application built with Expo for managing and browsing a product catalog. Features user authentication, product management, advanced filtering, and a beautiful custom UI with floating action buttons.
+Une application mobile React Native moderne construite avec Expo pour la gestion et la navigation d'un catalogue de produits. L'application propose une authentification utilisateur, une gestion complète des produits, des filtres avancés et une interface utilisateur personnalisée avec des boutons d'action flottants.
 
-## 📱 Project Overview
+## 🎯 Vue d'ensemble du Projet
 
-This app provides a complete solution for product catalog management with features like:
-- **User Authentication**: Secure login/signup with form validation
-- **Product Management**: Add, edit, delete, and view products
-- **Advanced Search & Filtering**: Find products quickly with multiple filter options
-- **Custom UI**: Beautiful design with custom tab bar and floating action button
-- **Responsive Design**: Works seamlessly across different device sizes
+Cette application offre une solution complète pour la gestion de catalogue de produits avec des fonctionnalités comme :
+- **🔐 Authentification Utilisateur** : Connexion/inscription sécurisée avec validation de formulaires
+- **📦 Gestion de Produits** : Ajouter, modifier, supprimer et visualiser des produits
+- **🔍 Recherche & Filtrage Avancé** : Trouver rapidement des produits avec plusieurs options de filtres
+- **📸 Upload d'Images** : Capture de photos et sélection depuis la galerie
+- **🎨 Interface Personnalisée** : Design moderne avec barre d'onglets personnalisée et bouton d'action flottant
+- **📱 Design Responsive** : Fonctionne parfaitement sur différentes tailles d'écrans
+- **🌍 Localisation Française** : Interface entièrement en français
 
-## 🚀 Quick Start
+## 🚀 Démarrage Rapide
 
-### Prerequisites
+### Prérequis
 
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/) (v6 or higher)
+- [Node.js](https://nodejs.org/) (v18 ou supérieur)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) (v6 ou supérieur)
 - [Git](https://git-scm.com/)
+- [Yarn](https://yarnpkg.com/) (recommandé) ou npm
 
 ### Installation
 
-1. **Clone the repository**
+1. **Cloner le repository**
    ```bash
    git clone <repository-url>
    cd test.mobile
    ```
 
-2. **Install dependencies**
+2. **Installer les dépendances**
    ```bash
-   npm install
-   # or
    yarn install
+   # ou
+   npm install
    ```
 
-3. **Start the development server**
+3. **Démarrer le serveur de développement**
    ```bash
+   yarn start
+   # ou
    npx expo start
    ```
 
-4. **Run on your device**
-   - Install the **Expo Go** app on your phone
-   - Scan the QR code displayed in the terminal
-   - Or press `a` for Android emulator or `i` for iOS simulator
+4. **Exécuter sur votre appareil**
+   - Installez l'application **Expo Go** sur votre téléphone
+   - Scannez le code QR affiché dans le terminal
+   - Ou appuyez sur `a` pour l'émulateur Android ou `i` pour le simulateur iOS
 
-### Available Scripts
+### Scripts Disponibles
 
 ```bash
-npm start          # Start Expo development server
-npm run android    # Start on Android emulator
-npm run ios        # Start on iOS simulator
-npm run web        # Start web version
-npm test           # Run tests
+yarn start          # Démarrer le serveur de développement Expo
+yarn android        # Démarrer sur l'émulateur Android
+yarn ios           # Démarrer sur le simulateur iOS
+yarn web           # Démarrer la version web
+yarn test          # Exécuter les tests
 ```
 
-## 🏗️ Project Architecture
+## 🏗️ Architecture de l'Application
 
-### Directory Structure
+### Structure des Dossiers
 
 ```
 test.mobile/
-├── App.tsx                 # Main app entry point
-├── app.json               # Expo configuration
-├── package.json           # Dependencies and scripts
-├── tsconfig.json          # TypeScript configuration
-├── assets/                # Images, fonts, and static files
-├── components/            # Reusable UI components
-│   ├── ErrorMessage.tsx   # Error display component
-│   ├── FormInput.tsx      # Form input component
-│   ├── LoadingSpinner.tsx # Loading indicator
-│   ├── ProductItem.tsx    # Product card component
+├── App.tsx                    # Point d'entrée principal de l'application
+├── app.json                  # Configuration Expo
+├── package.json              # Dépendances et scripts
+├── tsconfig.json             # Configuration TypeScript
+├── assets/                   # Images, polices et fichiers statiques
+├── components/               # Composants UI réutilisables
+│   ├── FormInput/            # Composant de saisie de formulaire
+│   │   ├── index.tsx
+│   │   └── styles.ts
+│   ├── ProductItem/          # Composant de carte produit
+│   │   ├── index.tsx
+│   │   └── styles.ts
+│   ├── ImagePickerField.tsx  # Sélecteur d'images avec caméra/galerie
+│   ├── FilterModal.tsx       # Modal de filtres avancés
+│   ├── LoadingSpinner.tsx    # Indicateur de chargement
 │   └── ...
-├── contexts/              # React Context providers
-│   ├── AuthContext.tsx    # Authentication state management
-│   └── ProductContext.tsx # Product data management
-├── hooks/                 # Custom React hooks
-├── navigation/            # Navigation configuration
-│   └── RootNavigator.tsx  # Main navigation setup
-├── screens/               # App screens
-│   ├── LoginScreen.tsx    # User authentication
-│   ├── HomeScreen.tsx     # Product catalog
-│   ├── AddProductScreen.tsx # Product creation
-│   └── ...
-├── services/              # API and external services
-├── types/                 # TypeScript type definitions
-├── utils/                 # Utility functions
-│   ├── validation.ts      # Form validation
-│   └── errorHandling.ts   # Error handling utilities
-└── constants/             # App constants and themes
+├── contexts/                 # Providers React Context
+│   ├── AuthContext.tsx       # Gestion de l'état d'authentification
+│   └── ProductContext.tsx    # Gestion des données produits
+├── navigation/               # Configuration de navigation
+│   └── RootNavigator.tsx     # Configuration de navigation principale
+├── screens/                  # Écrans de l'application
+│   ├── LoginScreen.tsx       # Authentification utilisateur
+│   ├── SignupScreen.tsx      # Inscription utilisateur
+│   ├── HomeScreen.tsx        # Catalogue de produits
+│   ├── AddProductScreen.tsx  # Création de produit
+│   ├── ProductEditScreen.tsx # Modification de produit
+│   ├── ProductDetailScreen.tsx # Détails du produit
+│   ├── ProfileScreen.tsx     # Profil utilisateur
+│   └── EditProfileScreen.tsx # Modification du profil
+├── services/                 # Appels API et services externes
+│   ├── authService.ts        # Service d'authentification
+│   └── productService.ts     # Service de gestion des produits
+├── utils/                    # Fonctions utilitaires
+│   ├── validations.ts        # Validation de formulaires
+│   └── translations.ts       # Système de traductions françaises
+├── constants/                # Constantes et thèmes de l'application
+│   └── Colors.ts            # Palette de couleurs
+├── data/                     # Données mockées
+│   ├── products.json        # Données de produits
+│   └── users.js             # Données utilisateurs
+└── types/                    # Définitions de types TypeScript
+    └── index.ts             # Types principaux
 ```
 
-### Key Technologies
+### Technologies Clés
 
-- **React Native 0.79.4** - Cross-platform mobile development
-- **Expo SDK 53** - Development platform and tools
-- **TypeScript 5.8** - Type-safe JavaScript
-- **React Navigation 7** - Navigation library
-- **React Context** - State management
-- **React Native Elements** - UI component library
+- **React Native 0.79.4** - Développement mobile cross-platform
+- **Expo SDK 53** - Plateforme de développement et outils
+- **TypeScript 5.8** - JavaScript avec typage statique
+- **React Navigation 7** - Bibliothèque de navigation
+- **React Context** - Gestion d'état
+- **React Native Elements** - Bibliothèque de composants UI
+- **Expo Image Picker** - Gestion des images et caméra
+- **AsyncStorage** - Stockage local persistant
 
-## ✨ Key Features
+## ✨ Fonctionnalités Principales
 
-### 🔐 Authentication System
-- **Secure Login/Signup**: Email and password authentication
-- **Form Validation**: Real-time validation with user-friendly error messages
-- **Session Management**: Persistent login state with AsyncStorage
-- **Auto-redirect**: Automatic navigation based on authentication status
+### 🔐 Système d'Authentification
+- **Connexion/Inscription Sécurisée** : Authentification par email et mot de passe
+- **Validation de Formulaires** : Validation en temps réel avec messages d'erreur conviviaux
+- **Gestion de Session** : État de connexion persistant avec AsyncStorage
+- **Redirection Automatique** : Navigation automatique basée sur le statut d'authentification
+- **Gestion d'Erreurs** : Messages d'erreur localisés en français
 
-### 📦 Product Management
-- **CRUD Operations**: Create, read, update, and delete products
-- **Product Details**: Rich product information with status badges
-- **Image Support**: Product image handling with Expo Image Picker
-- **User-specific Products**: Products are associated with authenticated users
+### 📦 Gestion de Produits
+- **Opérations CRUD** : Créer, lire, modifier et supprimer des produits
+- **Détails de Produits** : Informations riches avec badges de statut
+- **Support d'Images** : Gestion d'images avec Expo Image Picker
+- **Produits Spécifiques à l'Utilisateur** : Les produits sont associés aux utilisateurs authentifiés
+- **Upload d'Images** : Capture de photos et sélection depuis la galerie
 
-### 🔍 Search & Filtering
-- **Advanced Search**: Search by product name, description, category, or seller
-- **Filter Modal**: Multiple filter options (category, price range, status)
-- **Pagination**: Efficient loading of large product lists
-- **Real-time Results**: Instant search results as you type
+### 🔍 Recherche & Filtrage
+- **Recherche Avancée** : Recherche par nom, description, catégorie ou vendeur
+- **Modal de Filtres** : Plusieurs options de filtres (catégorie, fourchette de prix, statut)
+- **Pagination** : Chargement efficace de grandes listes de produits
+- **Résultats en Temps Réel** : Résultats de recherche instantanés
 
-### 🎨 Custom UI Components
-- **Floating Action Button**: Quick access to add new products
-- **Custom Tab Bar**: Beautiful tab navigation with central notch design
-- **Status Badges**: Visual indicators for product status
-- **Loading States**: Smooth loading indicators throughout the app
-- **Error Handling**: User-friendly error messages and recovery
+### 🎨 Composants UI Personnalisés
+- **Bouton d'Action Flottant** : Accès rapide pour ajouter de nouveaux produits
+- **Barre d'Onglets Personnalisée** : Navigation par onglets avec design central
+- **Badges de Statut** : Indicateurs visuels pour le statut des produits
+- **États de Chargement** : Indicateurs de chargement fluides
+- **Gestion d'Erreurs** : Messages d'erreur conviviaux et récupération
 
-### 📱 Responsive Design
-- **Cross-platform**: Works on iOS, Android, and Web
-- **Safe Area Support**: Proper handling of device notches and status bars
-- **Adaptive Layout**: Responsive design for different screen sizes
-- **Touch-friendly**: Optimized for mobile interaction
+### 📱 Design Responsive
+- **Cross-platform** : Fonctionne sur iOS, Android et Web
+- **Support Safe Area** : Gestion appropriée des encoches et barres de statut
+- **Layout Adaptatif** : Design responsive pour différentes tailles d'écrans
+- **Optimisé Tactile** : Optimisé pour l'interaction mobile
 
-## 🛠️ Technical Decisions
+## 🛠️ Choix Techniques
 
-### Why Expo?
-- **Rapid Development**: Quick setup and development workflow
-- **Cross-platform**: Single codebase for iOS, Android, and Web
-- **Rich Ecosystem**: Access to native device features through Expo SDK
-- **Easy Deployment**: Simple build and deployment process
-- **Over-the-air Updates**: Update app without app store approval
+### Pourquoi Expo ?
+- **Développement Rapide** : Configuration et workflow de développement rapides
+- **Cross-platform** : Code unique pour iOS, Android et Web
+- **Écosystème Riche** : Accès aux fonctionnalités natives via Expo SDK
+- **Déploiement Facile** : Processus de build et déploiement simple
+- **Mises à Jour OTA** : Mettre à jour l'app sans approbation de l'app store
+- **Gestion des Permissions** : Configuration automatique des permissions
 
-### Why React Context over Redux?
-- **Simplicity**: Easier to understand and implement for smaller apps
-- **Built-in**: No additional dependencies required
-- **Performance**: Sufficient for the app's state management needs
-- **TypeScript Support**: Excellent TypeScript integration
-- **Learning Curve**: Easier for developers new to state management
+### Pourquoi React Context au lieu de Redux ?
+- **Simplicité** : Plus facile à comprendre et implémenter pour les petites applications
+- **Intégré** : Aucune dépendance supplémentaire requise
+- **Performance** : Suffisant pour les besoins de gestion d'état de l'application
+- **Support TypeScript** : Excellente intégration TypeScript
+- **Courbe d'Apprentissage** : Plus facile pour les développeurs nouveaux dans la gestion d'état
 
-### Why React Navigation?
-- **Native Performance**: Uses native navigation components
-- **Type Safety**: Excellent TypeScript support
-- **Flexibility**: Supports complex navigation patterns
-- **Active Development**: Well-maintained with regular updates
-- **Community**: Large community and extensive documentation
+### Pourquoi React Navigation ?
+- **Performance Native** : Utilise les composants de navigation natifs
+- **Type Safety** : Excellent support TypeScript
+- **Flexibilité** : Supporte les patterns de navigation complexes
+- **Développement Actif** : Bien maintenu avec des mises à jour régulières
+- **Communauté** : Grande communauté et documentation extensive
 
-### Why TypeScript?
-- **Type Safety**: Catch errors at compile time
-- **Better IDE Support**: Enhanced autocomplete and refactoring
-- **Documentation**: Types serve as inline documentation
-- **Maintainability**: Easier to maintain and refactor code
-- **Team Collaboration**: Better code understanding across team members
+### Pourquoi TypeScript ?
+- **Type Safety** : Détecter les erreurs à la compilation
+- **Meilleur Support IDE** : Autocomplétion et refactoring améliorés
+- **Documentation** : Les types servent de documentation inline
+- **Maintenabilité** : Plus facile de maintenir et refactoriser le code
+- **Collaboration d'Équipe** : Meilleure compréhension du code entre les membres
 
-## 🧩 Major Components
+### Pourquoi Expo Image Picker ?
+- **Fonctionnalités Complètes** : Capture de photos et sélection de galerie
+- **Permissions Automatiques** : Gestion automatique des permissions
+- **Cross-platform** : Fonctionne sur iOS et Android
+- **Édition d'Images** : Recadrage et ajustement intégrés
+- **Performance** : Optimisé pour les appareils mobiles
 
-### Authentication Components
+## 🧩 Composants Majeurs
+
+### Composants d'Authentification
 
 #### `AuthContext.tsx`
-Manages user authentication state and provides login/logout functionality.
+Gère l'état d'authentification utilisateur et fournit les fonctionnalités de connexion/déconnexion.
 
 ```typescript
-// Key features:
-- User session management
-- AsyncStorage persistence
-- Loading and error states
-- Form validation integration
+// Fonctionnalités clés :
+- Gestion de session utilisateur
+- Persistance AsyncStorage
+- États de chargement et d'erreur
+- Intégration validation de formulaires
+- Gestion d'erreurs sans exceptions
 ```
 
 #### `LoginScreen.tsx` & `SignupScreen.tsx`
-User authentication screens with comprehensive form validation and error handling.
+Écrans d'authentification utilisateur avec validation de formulaires complète et gestion d'erreurs.
 
 ```typescript
-// Features:
-- Real-time form validation
-- User-friendly error messages
-- Loading states during authentication
-- Automatic redirection after login
+// Fonctionnalités :
+- Validation de formulaires en temps réel
+- Messages d'erreur conviviaux
+- États de chargement pendant l'authentification
+- Redirection automatique après connexion
+- Interface entièrement en français
 ```
 
-### Product Management Components
+### Composants de Gestion de Produits
 
 #### `ProductContext.tsx`
-Centralized product data management with CRUD operations and user-specific filtering.
+Gestion centralisée des données produits avec opérations CRUD et filtrage spécifique à l'utilisateur.
 
 ```typescript
-// Key methods:
-- fetchProducts(): Load all products
-- addProduct(): Create new product
-- updateProduct(): Modify existing product
-- deleteProduct(): Remove product
-- getUserProducts(): Filter by user
-- searchProducts(): Search functionality
+// Méthodes clés :
+- fetchProducts(): Charger tous les produits
+- addProduct(): Créer un nouveau produit
+- updateProduct(): Modifier un produit existant
+- deleteProduct(): Supprimer un produit
+- getUserProducts(): Filtrer par utilisateur
+- searchProducts(): Fonctionnalité de recherche
 ```
 
-#### `ProductItem.tsx`
-Reusable product card component with status badges and action buttons.
+#### `ProductItem/index.tsx`
+Composant de carte produit réutilisable avec badges de statut et boutons d'action.
 
 ```typescript
-// Features:
-- Product image display
-- Status badge indicators
-- Action buttons (edit/delete)
-- Responsive layout
-- Touch feedback
+// Fonctionnalités :
+- Affichage d'image de produit
+- Indicateurs de badge de statut
+- Boutons d'action (modifier/supprimer)
+- Layout responsive
+- Retour tactile
+- Gestion des images locales
 ```
 
 #### `ProductDetailScreen.tsx`
-Detailed product view with full information and editing capabilities.
+Vue détaillée du produit avec informations complètes et capacités d'édition.
 
 ```typescript
-// Features:
-- Complete product information
-- Image gallery support
-- Edit/delete actions
-- Status management
-- User-specific actions
+// Fonctionnalités :
+- Informations complètes du produit
+- Support de galerie d'images
+- Actions modifier/supprimer
+- Gestion de statut
+- Actions spécifiques à l'utilisateur
+- Confirmation de suppression
 ```
 
-### UI Components
+### Composants UI
 
-#### `CustomTabBar`
-Custom bottom tab navigation with floating action button and central notch design.
+#### `ImagePickerField.tsx`
+Composant de sélection d'images avec support caméra et galerie.
 
 ```typescript
-// Features:
-- Floating action button for quick add
-- Custom SVG notch design
-- Smooth animations
-- Platform-specific styling
+// Fonctionnalités :
+- Capture de photos avec l'appareil photo
+- Sélection depuis la galerie
+- Édition et recadrage d'images
+- Aperçu en temps réel
+- Suppression sécurisée avec confirmation
+- Gestion des permissions
+```
+
+#### `CustomTabBar`
+Navigation par onglets personnalisée avec bouton d'action flottant et design d'encoche central.
+
+```typescript
+// Fonctionnalités :
+- Bouton d'action flottant pour ajout rapide
+- Design d'encoche SVG personnalisé
+- Animations fluides
+- Styling spécifique à la plateforme
+- Visibilité conditionnelle du bouton flottant
 ```
 
 #### `FilterModal.tsx`
-Advanced filtering interface with multiple filter options.
+Interface de filtrage avancée avec plusieurs options de filtres.
 
 ```typescript
-// Filter options:
-- Category selection
-- Price range slider
-- Status filters
-- Search integration
-- Reset functionality
+// Options de filtres :
+- Sélection de catégorie
+- Curseur de fourchette de prix
+- Filtres de statut
+- Intégration de recherche
+- Fonctionnalité de réinitialisation
+- Interface en français
 ```
 
 #### `ErrorMessage.tsx`
-Reusable error display component with different message types.
+Composant d'affichage d'erreur réutilisable avec différents types de messages.
 
 ```typescript
-// Message types:
-- Error (red)
-- Warning (orange)
-- Info (blue)
-- Auto-dismiss functionality
+// Types de messages :
+- Erreur (rouge)
+- Avertissement (orange)
+- Information (bleu)
+- Fonctionnalité de fermeture automatique
 ```
 
-## 📱 Testing the App
+## 📱 Test de l'Application
 
-### Physical Device Testing
+### Test sur Appareil Physique
 
-1. **Install Expo Go**
+1. **Installer Expo Go**
    - iOS: [App Store](https://apps.apple.com/app/expo-go/id982107779)
    - Android: [Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent)
 
-2. **Connect to Development Server**
+2. **Se connecter au serveur de développement**
    ```bash
-   npx expo start
+   yarn start
    ```
 
-3. **Scan QR Code**
-   - iOS: Use Camera app
-   - Android: Use Expo Go app
+3. **Scanner le Code QR**
+   - iOS: Utiliser l'application Appareil photo
+   - Android: Utiliser l'application Expo Go
 
-### Emulator Testing
+### Test sur Émulateur
 
-#### Android Emulator
+#### Émulateur Android
 ```bash
-# Start Android emulator first, then:
-npx expo start --android
+# Démarrer l'émulateur Android d'abord, puis :
+yarn android
 ```
 
-#### iOS Simulator (macOS only)
+#### Simulateur iOS (macOS uniquement)
 ```bash
-# Start iOS simulator first, then:
-npx expo start --ios
+# Démarrer le simulateur iOS d'abord, puis :
+yarn ios
 ```
 
-### Web Testing
+### Test Web
 ```bash
-npx expo start --web
+yarn web
 ```
 
-## 🔧 Development Workflow
+## 🔧 Workflow de Développement
 
-### Code Structure Best Practices
+### Bonnes Pratiques de Structure de Code
 
-1. **Component Organization**
-   - Keep components small and focused
-   - Use TypeScript interfaces for props
-   - Implement proper error boundaries
+1. **Organisation des Composants**
+   - Garder les composants petits et focalisés
+   - Utiliser des interfaces TypeScript pour les props
+   - Implémenter des boundaries d'erreur appropriées
+   - Extraire les styles pour les composants complexes
 
-2. **State Management**
-   - Use Context for global state
-   - Local state for component-specific data
-   - Proper loading and error states
+2. **Gestion d'État**
+   - Utiliser Context pour l'état global
+   - État local pour les données spécifiques aux composants
+   - États de chargement et d'erreur appropriés
+   - Gestion d'erreurs sans exceptions
 
 3. **Navigation**
-   - Type-safe navigation with TypeScript
-   - Proper screen organization
-   - Authentication guards
+   - Navigation type-safe avec TypeScript
+   - Organisation appropriée des écrans
+   - Guards d'authentification
+   - Gestion des paramètres de navigation
 
-4. **Error Handling**
-   - Comprehensive error boundaries
-   - User-friendly error messages
-   - Proper error logging
+4. **Gestion d'Erreurs**
+   - Boundaries d'erreur complets
+   - Messages d'erreur conviviaux
+   - Logging d'erreur approprié
+   - Récupération d'erreur
 
-### Code Quality
+### Qualité de Code
 
-- **TypeScript**: Strict type checking enabled
-- **ESLint**: Code linting and formatting
-- **Jest**: Unit testing framework
-- **Prettier**: Code formatting
+- **TypeScript** : Vérification de types stricte activée
+- **ESLint** : Linting et formatage de code
+- **Jest** : Framework de tests unitaires
+- **Prettier** : Formatage de code
+- **Structure Modulaire** : Organisation en dossiers par fonctionnalité
 
-## 🚀 Future Improvements
+## 🚀 Améliorations Futures
 
-### Planned Features
+### Fonctionnalités Planifiées
 
-- [ ] **Push Notifications**: Real-time product updates
-- [ ] **Offline Support**: Offline-first architecture with sync
-- [ ] **Image Optimization**: Lazy loading and compression
-- [ ] **Advanced Analytics**: User behavior tracking
-- [ ] **Social Features**: Product sharing and comments
-- [ ] **Payment Integration**: In-app purchases
-- [ ] **Multi-language Support**: Internationalization
-- [ ] **Dark Mode**: Theme switching capability
+- [ ] **Notifications Push** : Mises à jour de produits en temps réel
+- [ ] **Support Hors Ligne** : Architecture offline-first avec synchronisation
+- [ ] **Optimisation d'Images** : Chargement différé et compression
+- [ ] **Analytics Avancés** : Suivi du comportement utilisateur
+- [ ] **Fonctionnalités Sociales** : Partage de produits et commentaires
+- [ ] **Intégration de Paiement** : Achats in-app
+- [ ] **Support Multi-langues** : Internationalisation
+- [ ] **Mode Sombre** : Capacité de changement de thème
 
-### Technical Enhancements
+### Améliorations Techniques
 
-- [ ] **Performance Optimization**: React.memo and useMemo usage
-- [ ] **Testing Coverage**: Comprehensive unit and integration tests
-- [ ] **CI/CD Pipeline**: Automated testing and deployment
-- [ ] **Code Splitting**: Lazy loading of screens
-- [ ] **Bundle Optimization**: Reduced app size
-- [ ] **Accessibility**: Screen reader support
+- [ ] **Optimisation de Performance** : Utilisation de React.memo et useMemo
+- [ ] **Couverture de Tests** : Tests unitaires et d'intégration complets
+- [ ] **Pipeline CI/CD** : Tests et déploiement automatisés
+- [ ] **Code Splitting** : Chargement différé des écrans
+- [ ] **Optimisation de Bundle** : Réduction de la taille de l'app
+- [ ] **Accessibilité** : Support des lecteurs d'écran
 
-### Architecture Improvements
+### Améliorations d'Architecture
 
-- [ ] **API Integration**: Replace mock data with real backend
-- [ ] **Caching Strategy**: Implement proper data caching
-- [ ] **State Persistence**: Enhanced offline capabilities
-- [ ] **Error Monitoring**: Crash reporting and analytics
-- [ ] **Performance Monitoring**: App performance tracking
+- [ ] **Intégration API** : Remplacer les données mockées par un vrai backend
+- [ ] **Stratégie de Cache** : Implémenter un cache de données approprié
+- [ ] **Persistance d'État** : Capacités hors ligne améliorées
+- [ ] **Monitoring d'Erreurs** : Reporting de crashes et analytics
+- [ ] **Monitoring de Performance** : Suivi de performance de l'app
 
-## 🤝 Contributing
+## 🤝 Contribution
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Fork le repository
+2. Créer une branche de fonctionnalité (`git checkout -b feature/fonctionnalite-incroyable`)
+3. Commiter vos changements (`git commit -m 'Ajouter une fonctionnalité incroyable'`)
+4. Pousser vers la branche (`git push origin feature/fonctionnalite-incroyable`)
+5. Ouvrir une Pull Request
 
-## 📄 License
+## 📄 Licence
 
-This project is licensed under the 0BSD License - see the [LICENSE](LICENSE) file for details.
+Ce projet est sous licence 0BSD - voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ## 📞 Support
 
-For support and questions:
-- Create an issue in the repository
-- Check the [Expo documentation](https://docs.expo.dev/)
-- Review [React Native documentation](https://reactnative.dev/)
+Pour le support et les questions :
+- Créer une issue dans le repository
+- Consulter la [documentation Expo](https://docs.expo.dev/)
+- Revoir la [documentation React Native](https://reactnative.dev/)
 
 ---
 
-**Built with ❤️ using React Native and Expo** 
+**Construit avec ❤️ en utilisant React Native et Expo** 

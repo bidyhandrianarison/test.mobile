@@ -14,18 +14,35 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Cette application nécessite l'accès à l'appareil photo pour prendre des photos de produits.",
+        "NSPhotoLibraryUsageDescription": "Cette application nécessite l'accès à la galerie pour sélectionner des images de produits."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro"
     },
-    "plugins": []
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application nécessite l'accès à vos photos pour sélectionner des images de produits.",
+          "cameraPermission": "L'application nécessite l'accès à l'appareil photo pour prendre des photos de produits."
+        }
+      ]
+    ]
   }
 }
