@@ -63,10 +63,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
           contentContainerStyle={styles.modalContent}
           showsVerticalScrollIndicator={false}
         >
-          <RNText style={styles.modalTitle}>Filtres</RNText>
+          <RNText style={styles.modalTitle}>{t('search.filters')}</RNText>
           
           {/* Catégorie */}
-          <RNText style={styles.sectionTitle}>Catégorie</RNText>
+          <RNText style={styles.sectionTitle}>{t('search.category')}</RNText>
           <View style={styles.chipRow}>
             {categories.map((cat) => (
               <TouchableOpacity
@@ -80,7 +80,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
           </View>
           
           {/* Vendeur */}
-          <RNText style={styles.sectionTitle}>Vendeur</RNText>
+          <RNText style={styles.sectionTitle}>{t('search.seller')}</RNText>
           <View style={styles.chipRow}>
             {sellers.map((seller) => (
               <TouchableOpacity
@@ -94,13 +94,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
           </View>
           
           {/* Prix */}
-          <RNText style={styles.sectionTitle}>Prix</RNText>
+          <RNText style={styles.sectionTitle}>{t('search.price')}</RNText>
           <View style={styles.priceRow}>
             <TextInput
               style={styles.priceInput}
               value={filters.minPrice}
               onChangeText={val => setFilters(f => ({ ...f, minPrice: val }))}
-              placeholder="Min"
+              placeholder={t('search.min')}
               keyboardType="numeric"
               placeholderTextColor={Colors.light.tabIconDefault}
             />
@@ -109,7 +109,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               style={styles.priceInput}
               value={filters.maxPrice}
               onChangeText={val => setFilters(f => ({ ...f, maxPrice: val }))}
-              placeholder="Max"
+              placeholder={t('search.max')}
               keyboardType="numeric"
               placeholderTextColor={Colors.light.tabIconDefault}
             />
@@ -117,7 +117,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
           
           {/* Actif uniquement */}
           <View style={styles.switchRow}>
-            <RNText style={styles.sectionTitle}>Actifs uniquement</RNText>
+            <RNText style={styles.sectionTitle}>{t('search.activeOnly')}</RNText>
             <TouchableOpacity
               style={[styles.switch, filters.activeOnly && styles.switchActive]}
               onPress={() => setFilters(f => ({ ...f, activeOnly: !f.activeOnly }))}
@@ -141,7 +141,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 onReset();
               }}
             >
-              <RNText style={styles.resetBtnText}>Réinitialiser</RNText>
+              <RNText style={styles.resetBtnText}>{t('search.reset')}</RNText>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.applyBtn} 
@@ -150,7 +150,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 onApply();
               }}
             >
-              <RNText style={styles.applyBtnText}>Appliquer les filtres</RNText>
+              <RNText style={styles.applyBtnText}>{t('search.applyFilters')}</RNText>
             </TouchableOpacity>
           </View>
         </ScrollView>

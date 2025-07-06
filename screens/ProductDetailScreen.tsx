@@ -52,8 +52,8 @@ const ProductDetailScreenPage = () => {
     
     if (!canModify) {
       Alert.alert(
-        'Unauthorized Action',
-        'You can only modify your own products.',
+        'Action non autorisée',
+        'Vous ne pouvez modifier que vos propres produits.',
         [{ text: 'OK' }]
       );
       return;
@@ -71,23 +71,23 @@ const ProductDetailScreenPage = () => {
 
     if (!canModify) {
       Alert.alert(
-        'Unauthorized Action',
-        'You can only delete your own products.',
+        'Action non autorisée',
+        'Vous ne pouvez supprimer que vos propres produits.',
         [{ text: 'OK' }]
       );
       return;
     }
 
     Alert.alert(
-      'Confirm Deletion',
-      `Are you sure you want to delete "${product.name}"?\n\nThis action cannot be undone.`,
+      'Confirmer la suppression',
+      `Êtes-vous sûr de vouloir supprimer "${product.name}" ?\n\nCette action ne peut pas être annulée.`,
       [
         {
-          text: 'Cancel',
+          text: 'Annuler',
           style: 'cancel',
         },
         {
-          text: 'Delete',
+          text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -95,8 +95,8 @@ const ProductDetailScreenPage = () => {
               await fetchProducts();
               
               Alert.alert(
-                'Success', 
-                'Product deleted successfully',
+                'Succès', 
+                'Produit supprimé avec succès',
                 [
                   { 
                     text: 'OK', 
@@ -106,8 +106,8 @@ const ProductDetailScreenPage = () => {
               );
             } catch (error: any) {
               Alert.alert(
-                'Error', 
-                error.message || 'Unable to delete product'
+                'Erreur', 
+                error.message || 'Impossible de supprimer le produit'
               );
             }
           },
@@ -121,7 +121,7 @@ const ProductDetailScreenPage = () => {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <LoadingSpinner />
-        <Text style={styles.loadingText}>Loading product...</Text>
+        <Text style={styles.loadingText}>Chargement du produit...</Text>
       </SafeAreaView>
     );
   }
@@ -132,9 +132,9 @@ const ProductDetailScreenPage = () => {
       <SafeAreaView style={styles.errorContainer}>
         <View style={styles.errorContent}>
           <Feather name="alert-circle" size={64} color={Colors.light.tabIconDefault} />
-          <Text style={styles.errorTitle}>Product Not Found</Text>
+          <Text style={styles.errorTitle}>Produit introuvable</Text>
           <Text style={styles.errorSubtitle}>
-            This product doesn't exist or has been deleted
+            Ce produit n'existe pas ou a été supprimé
           </Text>
           <TouchableOpacity 
             style={styles.backButton} 
@@ -142,7 +142,7 @@ const ProductDetailScreenPage = () => {
             activeOpacity={0.8}
           >
             <Feather name="arrow-left" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.backButtonText}>Back</Text>
+            <Text style={styles.backButtonText}>Retour</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -170,9 +170,9 @@ const ProductDetailScreenPage = () => {
           <View style={styles.permissionIndicator}>
             <Feather name="info" size={16} color={Colors.light.tabIconDefault} />
             <Text style={styles.permissionText}>
-              Only the creator can modify this product
+              Seul le créateur peut modifier ce produit
             </Text>
-    </View>
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>

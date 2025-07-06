@@ -52,14 +52,14 @@ const UserStats = () => {
       <View style={styles.progressSection}>
         <Text style={styles.description}>
           {stats.totalCount > 0 
-            ? `You have created a total of ${stats.totalCount} product${stats.totalCount > 1 ? 's' : ''}`
-            : "You haven't created any products yet"
+            ? `${t('products.youHaveCreated')} ${stats.totalCount} ${pluralize(t('products.product'), t('products.products'), stats.totalCount)}`
+            : t('products.youHaventCreated')
           }
         </Text>
         
         <CircleStats
           value={stats.totalCount}
-          label="Products"
+          label={t('products.products')}
           color={Colors.light.tint}
           size={140}
         />
@@ -67,7 +67,7 @@ const UserStats = () => {
         {/* Total inventory value */}
         {stats.totalCount > 0 && (
           <Text style={styles.totalValue}>
-            Total value: {stats.totalValue.toFixed(2)} €
+            {t('products.totalValue')}: {stats.totalValue.toFixed(2)} €
           </Text>
         )}
       </View>
@@ -77,13 +77,13 @@ const UserStats = () => {
         <>
           <View style={styles.statsRow}>
             <StatCard
-              title="Active Products"
+              title={t('products.activeProducts')}
               value={stats.activeCount}
               iconName="checkmark-circle"
               color="#4CAF50"
             />
             <StatCard
-              title="Inactive Products"
+              title={t('products.inactiveProducts')}
               value={stats.inactiveCount}
               iconName="close-circle"
               color="#FF6B6B"
@@ -92,13 +92,13 @@ const UserStats = () => {
 
           <View style={styles.statsRow}>
             <StatCard
-              title="Average Price"
+              title={t('products.averagePrice')}
               value={`${stats.averagePrice.toFixed(2)} €`}
               iconName="trending-up"
               color="#FF9800"
             />
             <StatCard
-              title="Categories"
+              title={t('products.categories')}
               value={stats.categories.length}
               iconName="grid"
               color="#9C27B0"
@@ -108,7 +108,7 @@ const UserStats = () => {
           {/* Categories section */}
           {stats.categories.length > 0 && (
             <View style={styles.categoriesSection}>
-              <Text style={styles.categoriesTitle}>Your categories:</Text>
+              <Text style={styles.categoriesTitle}>{t('products.yourCategories')}</Text>
               <View style={styles.categoriesContainer}>
                 {stats.categories.map((category, index) => (
                   <View key={index} style={styles.categoryChip}>
@@ -125,7 +125,7 @@ const UserStats = () => {
       {stats.totalCount === 0 && (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            Start by adding your first product to see your statistics!
+            {t('products.startAddingProducts')}
           </Text>
         </View>
       )}

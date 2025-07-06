@@ -17,7 +17,7 @@ interface LoadingSpinnerProps {
  * @param color - Color of the spinner (defaults to app tint color)
  */
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  message = 'Loading...',
+  message = t('loading.loading'),
   size = 'large',
   color = Colors.light.tint,
 }) => {

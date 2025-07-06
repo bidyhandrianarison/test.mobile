@@ -2,6 +2,8 @@
  * Error handling utilities for authentication and form validation
  */
 
+import { t } from './translations';
+
 export interface AuthError {
   field?: 'email' | 'password' | 'username' | 'global';
   message: string;
@@ -14,7 +16,7 @@ export interface AuthError {
  * @returns AuthError object with user-friendly message
  */
 export const mapAuthError = (error: any): AuthError => {
-  const errorMessage = error?.message || error?.toString() || 'An unknown error occurred';
+  const errorMessage = error?.message || error?.toString() || t('errors.unknownError');
   
   // Network and connection errors
   if (errorMessage.toLowerCase().includes('network') || 
@@ -22,7 +24,7 @@ export const mapAuthError = (error: any): AuthError => {
       errorMessage.toLowerCase().includes('fetch')) {
     return {
       field: 'global',
-      message: 'Network error. Please check your internet connection and try again.',
+      message: t('errors.networkError'),
       userFriendly: true
     };
   }
@@ -34,7 +36,7 @@ export const mapAuthError = (error: any): AuthError => {
         errorMessage.toLowerCase().includes('in use')) {
       return {
         field: 'email',
-        message: 'This email is already in use. Please use a different email or try logging in.',
+        message: t('errors.emailAlreadyInUse'),
         userFriendly: true
       };
     }
@@ -42,7 +44,7 @@ export const mapAuthError = (error: any): AuthError => {
         errorMessage.toLowerCase().includes('format')) {
       return {
         field: 'email',
-        message: 'Please enter a valid email address.',
+        message: t('validation.emailInvalid'),
         userFriendly: true
       };
     }
@@ -50,13 +52,13 @@ export const mapAuthError = (error: any): AuthError => {
         errorMessage.toLowerCase().includes('does not exist')) {
       return {
         field: 'email',
-        message: 'No account found with this email address. Please sign up or check your email.',
+        message: t('errors.emailNotFound'),
         userFriendly: true
       };
     }
     return {
       field: 'email',
-      message: 'Email error. Please check your email address.',
+      message: t('validation.emailInvalid'),
       userFriendly: true
     };
   }
@@ -68,7 +70,7 @@ export const mapAuthError = (error: any): AuthError => {
         errorMessage.toLowerCase().includes('taken')) {
       return {
         field: 'username',
-        message: 'This username is already taken. Please choose a different username.',
+        message: t('errors.usernameTaken'),
         userFriendly: true
       };
     }
@@ -76,13 +78,13 @@ export const mapAuthError = (error: any): AuthError => {
         errorMessage.toLowerCase().includes('format')) {
       return {
         field: 'username',
-        message: 'Username must be at least 3 characters long.',
+        message: t('validation.usernameTooShort'),
         userFriendly: true
       };
     }
     return {
       field: 'username',
-      message: 'Username error. Please check your username.',
+      message: t('validation.usernameTooShort'),
       userFriendly: true
     };
   }
@@ -94,7 +96,7 @@ export const mapAuthError = (error: any): AuthError => {
         errorMessage.toLowerCase().includes('wrong')) {
       return {
         field: 'password',
-        message: 'Invalid password. Please check your password and try again.',
+        message: t('errors.wrongPassword'),
         userFriendly: true
       };
     }
@@ -102,13 +104,13 @@ export const mapAuthError = (error: any): AuthError => {
         errorMessage.toLowerCase().includes('requirements')) {
       return {
         field: 'password',
-        message: 'Password must be at least 6 characters long.',
+        message: t('validation.passwordTooShort'),
         userFriendly: true
       };
     }
     return {
       field: 'password',
-      message: 'Password error. Please check your password.',
+      message: t('validation.passwordTooShort'),
       userFriendly: true
     };
   }
@@ -119,7 +121,7 @@ export const mapAuthError = (error: any): AuthError => {
       errorMessage.toLowerCase().includes('signin')) {
     return {
       field: 'global',
-      message: 'Invalid email or password. Please check your credentials.',
+      message: t('errors.invalidCredentials'),
       userFriendly: true
     };
   }
@@ -130,7 +132,7 @@ export const mapAuthError = (error: any): AuthError => {
       errorMessage.toLowerCase().includes('create')) {
     return {
       field: 'global',
-      message: 'Failed to create account. Please try again.',
+      message: t('errors.signupFailed'),
       userFriendly: true
     };
   }
@@ -138,7 +140,7 @@ export const mapAuthError = (error: any): AuthError => {
   // Default fallback
   return {
     field: 'global',
-    message: 'Something went wrong. Please try again.',
+    message: t('errors.somethingWentWrong'),
     userFriendly: true
   };
 };

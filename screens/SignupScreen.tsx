@@ -77,7 +77,7 @@ const SignupScreen = () => {
     if (text.trim().length >= 3 || text.length === 0) {
       setUsernameError(null);
     } else {
-      setUsernameError("Username too short (minimum 3 characters)");
+      setUsernameError(t('validation.usernameTooShort'));
     }
   };
 
@@ -91,7 +91,7 @@ const SignupScreen = () => {
     if (text.length === 0 || validateEmail(text)) {
       setEmailError(null);
     } else {
-      setEmailError('Invalid email');
+      setEmailError(t('validation.emailInvalid'));
     }
   };
 
@@ -105,7 +105,7 @@ const SignupScreen = () => {
     if (text.length === 0 || validatePassword(text)) {
       setPasswordError(null);
     } else {
-      setPasswordError('Password must contain at least 6 characters');
+      setPasswordError(t('validation.passwordTooShort'));
     }
   };
 
@@ -139,26 +139,26 @@ const SignupScreen = () => {
     let hasErrors = false;
 
     if (!username.trim()) {
-      setUsernameError("Username required");
+      setUsernameError(t('validation.usernameRequired'));
       hasErrors = true;
     } else if (username.trim().length < 3) {
-      setUsernameError("Username too short (minimum 3 characters)");
+      setUsernameError(t('validation.usernameTooShort'));
       hasErrors = true;
     }
 
     if (!email.trim()) {
-      setEmailError('Email required');
+      setEmailError(t('validation.emailRequired'));
       hasErrors = true;
     } else if (!validateEmail(email)) {
-      setEmailError('Invalid email format');
+      setEmailError(t('validation.emailFormat'));
       hasErrors = true;
     }
 
     if (!password.trim()) {
-      setPasswordError('Password required');
+      setPasswordError(t('validation.passwordRequired'));
       hasErrors = true;
     } else if (!validatePassword(password)) {
-      setPasswordError('Password must contain at least 6 characters');
+      setPasswordError(t('validation.passwordTooShort'));
       hasErrors = true;
     }
 
@@ -206,8 +206,8 @@ const SignupScreen = () => {
         style={styles.container}
       >
                 <View style={styles.subContainer}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join us to manage your products</Text>
+          <Text style={styles.title}>{t('auth.createAccount')}</Text>
+          <Text style={styles.subtitle}>{t('auth.joinToManage')}</Text>
 
           <ErrorMessage
             message={globalError}
@@ -227,7 +227,7 @@ const SignupScreen = () => {
             handleChange={handleUsernameChange}
                         isPassword={false}
                         labelValue={username}
-            label="Username"
+            label={t('auth.username')}
                     />
           <FormFieldError error={usernameError} />
                     
@@ -236,7 +236,7 @@ const SignupScreen = () => {
             handleChange={handleEmailChange}
                         isPassword={false}
                         labelValue={email}
-            label="Email"
+            label={t('auth.email')}
                     />
           <FormFieldError error={emailError} />
                     
@@ -245,12 +245,12 @@ const SignupScreen = () => {
             handleChange={handlePasswordChange}
             isPassword
                         labelValue={password}
-            label="Password"
+            label={t('auth.password')}
                     />
           <FormFieldError error={passwordError} />
 
           <Button
-            title="Sign Up"
+            title={t('auth.signUp')}
             onPress={handleSignup}
             loading={signupLoading}
             buttonStyle={styles.signupButton}
@@ -258,12 +258,12 @@ const SignupScreen = () => {
             disabled={signupLoading}
           />
 
-          <View style={styles.loginRow}>
-            <Text style={styles.loginText}>Already have an account?</Text>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>{t('auth.haveAccount')}</Text>
             <TouchableOpacity onPress={navigateToLogin}>
-              <Text style={styles.loginLink}>Sign In</Text>
+              <Text style={styles.loginLink}>{t('auth.signInLink')}</Text>
             </TouchableOpacity>
-                </View>
+          </View>
             </View>
       </KeyboardAvoidingView>
         </SafeAreaView>

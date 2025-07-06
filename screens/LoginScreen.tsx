@@ -77,7 +77,7 @@ const LoginScreen = () => {
     if (text.length === 0 || validatePassword(text)) {
       setPasswordError(null);
     } else {
-      setPasswordError('Password must contain at least 6 characters');
+      setPasswordError(t('validation.passwordTooShort'));
     }
   };
 
@@ -86,7 +86,7 @@ const LoginScreen = () => {
    */
   const handleEmailBlur = () => {
     if (!validateEmail(email)) {
-      setEmailError('Invalid email');
+      setEmailError(t('validation.emailInvalid'));
     }
   };
 
@@ -168,8 +168,8 @@ const LoginScreen = () => {
         behavior={Platform.select({ ios: 'padding', android: undefined })}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.subtitle}>Sign in to your account to manage your products</Text>
+          <Text style={styles.title}>{t('auth.login')}</Text>
+          <Text style={styles.subtitle}>{t('auth.signInToManage')}</Text>
           
           <ErrorMessage
             message={globalError}
@@ -184,7 +184,7 @@ const LoginScreen = () => {
             handleChange={handleEmailChange}
                         isPassword={false}
                         labelValue={email}
-            label="Email"
+            label={t('auth.email')}
             onBlur={handleEmailBlur}
                     />
           <FormFieldError error={emailError} />
@@ -194,13 +194,13 @@ const LoginScreen = () => {
             handleChange={handlePasswordChange}
                         isPassword={true}
                         labelValue={password}
-            label="Password"
+            label={t('auth.password')}
             onBlur={() => {}}
           />
           <FormFieldError error={passwordError} />
 
           <Button
-            title="Sign In"
+            title={t('auth.signIn')}
             onPress={handleLogin}
             loading={loginLoading}
             buttonStyle={styles.loginButton}
@@ -209,9 +209,9 @@ const LoginScreen = () => {
           />
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account?</Text>
+            <Text style={styles.footerText}>{t('auth.noAccount')}</Text>
             <TouchableOpacity onPress={navigateToSignup}>
-              <Text style={styles.signupLink}>Create account</Text>
+              <Text style={styles.signupLink}>{t('auth.createAccountLink')}</Text>
             </TouchableOpacity>
                 </View>
             </View>

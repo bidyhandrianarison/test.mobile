@@ -162,27 +162,27 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
  */
 const TabNavigator = () => {
   return (
-    <Tab.Navigator
+      <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
+        screenOptions={{
         headerShown: false,
-      }}
-    >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Home',
         }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Profile',
-        }}
-      />
-    </Tab.Navigator>
+      >
+        <Tab.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+          tabBarLabel: 'Accueil',
+          }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+          tabBarLabel: 'Profil',
+          }}
+        />
+      </Tab.Navigator>
   );
 };
 
@@ -201,7 +201,7 @@ const MainNavigator = () => {
         name="AddProduct" 
         component={AddProductScreen}
         options={{ 
-          title: 'Add Product',
+          title: 'Ajouter un produit',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
@@ -212,7 +212,7 @@ const MainNavigator = () => {
         name="EditProfile" 
         component={EditProfileScreen}
         options={{ 
-          title: 'Edit Profile',
+          title: 'Modifier le profil',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
@@ -223,7 +223,7 @@ const MainNavigator = () => {
         name="ProductDetail" 
         component={ProductDetailScreen}
         options={{ 
-          title: 'Product Details',
+          title: 'Détails du produit',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' }
@@ -233,7 +233,7 @@ const MainNavigator = () => {
         name="ProductEdit" 
         component={ProductEditScreen}
         options={{ 
-          title: 'Edit Product',
+          title: 'Modifier le produit',
           headerStyle: { backgroundColor: Colors.light.tint },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' }
@@ -253,7 +253,7 @@ const RootNavigator = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.tint} />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }

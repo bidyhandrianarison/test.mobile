@@ -14,6 +14,20 @@ export type AuthUser = {
 };
 
 /**
+ * Standardized error object for authentication operations
+ * @property code - Unique error code for programmatic handling
+ * @property message - User-friendly error message
+ * @property field - Optional field-specific error (for form validation)
+ * @property technical - Technical details for debugging (not shown to users)
+ */
+export type AuthError = {
+  code: string;
+  message: string;
+  field?: 'email' | 'password' | 'username' | 'name' | 'global';
+  technical?: string;
+};
+
+/**
  * Authentication context interface providing auth functionality
  */
 export type AuthContextType = {
@@ -90,14 +104,195 @@ const authReducer = (state: AuthState, action: UserAction): AuthState => {
 };
 
 /**
+ * Normalizes errors into consistent AuthError objects
+ * @param error - Raw error from any source
+ * @param operation - The operation that failed (for context)
+ * @returns Normalized AuthError object
+ */
+const normalizeError = (error: any, operation: string): AuthError => {
+  const errorMessage = error?.message || error?.toString() || 'Une erreur inconnue s\'est produite';
+  const technical = error?.stack || error?.toString();
+
+  // Network and connection errors
+  if (errorMessage.toLowerCase().includes('network') || 
+      errorMessage.toLowerCase().includes('connection') ||
+      errorMessage.toLowerCase().includes('fetch') ||
+      errorMessage.toLowerCase().includes('timeout')) {
+    return {
+      code: 'auth/network-error',
+      message: 'Erreur réseau. Veuillez vérifier votre connexion internet et réessayer.',
+      field: 'global',
+      technical
+    };
+  }
+
+  // Email-related errors
+  if (errorMessage.toLowerCase().includes('email')) {
+    if (errorMessage.toLowerCase().includes('already') || 
+        errorMessage.toLowerCase().includes('exists') ||
+        errorMessage.toLowerCase().includes('in use')) {
+      return {
+        code: 'auth/email-already-in-use',
+        message: t('errors.emailAlreadyInUse'),
+        field: 'email',
+        technical
+      };
+    }
+    if (errorMessage.toLowerCase().includes('invalid') || 
+        errorMessage.toLowerCase().includes('format')) {
+      return {
+        code: 'auth/invalid-email',
+        message: t('validation.emailInvalid'),
+        field: 'email',
+        technical
+      };
+    }
+    if (errorMessage.toLowerCase().includes('not found') || 
+        errorMessage.toLowerCase().includes('does not exist')) {
+      return {
+        code: 'auth/user-not-found',
+        message: t('errors.emailNotFound'),
+        field: 'email',
+        technical
+      };
+    }
+    return {
+      code: 'auth/email-error',
+      message: t('validation.emailInvalid'),
+      field: 'email',
+      technical
+    };
+  }
+
+  // Password-related errors
+  if (errorMessage.toLowerCase().includes('password')) {
+    if (errorMessage.toLowerCase().includes('invalid') || 
+        errorMessage.toLowerCase().includes('incorrect') ||
+        errorMessage.toLowerCase().includes('wrong')) {
+      return {
+        code: 'auth/wrong-password',
+        message: t('errors.wrongPassword'),
+        field: 'password',
+        technical
+      };
+    }
+    if (errorMessage.toLowerCase().includes('weak') || 
+        errorMessage.toLowerCase().includes('requirements') ||
+        errorMessage.toLowerCase().includes('short')) {
+      return {
+        code: 'auth/weak-password',
+        message: t('validation.passwordTooShort'),
+        field: 'password',
+        technical
+      };
+    }
+    return {
+      code: 'auth/password-error',
+      message: t('validation.passwordTooShort'),
+      field: 'password',
+      technical
+    };
+  }
+
+  // Username-related errors
+  if (errorMessage.toLowerCase().includes('username') || 
+      errorMessage.toLowerCase().includes('name')) {
+    if (errorMessage.toLowerCase().includes('already') || 
+        errorMessage.toLowerCase().includes('exists') ||
+        errorMessage.toLowerCase().includes('taken')) {
+      return {
+        code: 'auth/username-taken',
+        message: t('errors.usernameTaken'),
+        field: 'username',
+        technical
+      };
+    }
+    if (errorMessage.toLowerCase().includes('invalid') || 
+        errorMessage.toLowerCase().includes('format') ||
+        errorMessage.toLowerCase().includes('short')) {
+      return {
+        code: 'auth/invalid-username',
+        message: t('validation.usernameTooShort'),
+        field: 'username',
+        technical
+      };
+    }
+    return {
+      code: 'auth/username-error',
+      message: t('validation.usernameTooShort'),
+      field: 'username',
+      technical
+    };
+  }
+
+  // Storage errors
+  if (errorMessage.toLowerCase().includes('storage') || 
+      errorMessage.toLowerCase().includes('asyncstorage')) {
+    return {
+      code: 'auth/storage-error',
+      message: 'Impossible de sauvegarder les informations de connexion. Veuillez réessayer.',
+      field: 'global',
+      technical
+    };
+  }
+
+  // Authentication errors
+  if (errorMessage.toLowerCase().includes('auth') || 
+      errorMessage.toLowerCase().includes('login') ||
+      errorMessage.toLowerCase().includes('signin')) {
+    return {
+      code: 'auth/invalid-credentials',
+      message: t('errors.invalidCredentials'),
+      field: 'global',
+      technical
+    };
+  }
+
+  // Registration errors
+  if (errorMessage.toLowerCase().includes('signup') || 
+      errorMessage.toLowerCase().includes('register') ||
+      errorMessage.toLowerCase().includes('create')) {
+    return {
+      code: 'auth/signup-failed',
+      message: t('errors.signupFailed'),
+      field: 'global',
+      technical
+    };
+  }
+
+  // Default fallback
+  return {
+    code: 'auth/unknown-error',
+    message: t('errors.somethingWentWrong'),
+    field: 'global',
+    technical
+  };
+};
+
+/**
  * AuthProvider component provides authentication context
  * 
  * Features:
- * - User login/logout functionality
- * - User registration
- * - Profile updates
- * - Persistent authentication state
+ * - User login/logout functionality with comprehensive error handling
+ * - User registration with validation
+ * - Profile updates with persistence
+ * - Persistent authentication state via AsyncStorage
  * - Loading and error state management
+ * - Normalized error responses with user-friendly messages
+ * 
+ * Error Codes:
+ * - auth/network-error: Network connectivity issues
+ * - auth/email-already-in-use: Email already registered
+ * - auth/invalid-email: Invalid email format
+ * - auth/user-not-found: No account with this email
+ * - auth/wrong-password: Incorrect password
+ * - auth/weak-password: Password too short
+ * - auth/username-taken: Username already taken
+ * - auth/invalid-username: Username too short
+ * - auth/storage-error: AsyncStorage issues
+ * - auth/invalid-credentials: General auth failure
+ * - auth/registration-failed: Signup failure
+ * - auth/unknown-error: Unhandled errors
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(authReducer, {
@@ -120,13 +315,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * @returns Promise<boolean> - True if user is authenticated
    */
   const checkAuth = async (): Promise<boolean> => {
-    try {
-      const userJSON = await AsyncStorage.getItem('user');
-      if (userJSON) {
+      try {
+        const userJSON = await AsyncStorage.getItem('user');
+        if (userJSON) {
         const user = JSON.parse(userJSON);
         dispatch({ type: 'LOGIN', payload: user });
         return true;
-      } else {
+        } else {
         dispatch({ type: 'LOGOUT' });
         return false;
       }
@@ -158,10 +353,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      */
     checkAuth,
     /**
+     * Clear the current error state
+     */
+    clearError,
+    /**
      * Authenticate user with email and password
+     * 
      * @param email - User's email address
      * @param password - User's password
      * @returns Promise<boolean> - True if login successful
+     * @throws AuthError - Normalized error with code and user-friendly message
+     * 
+     * Possible error codes:
+     * - auth/network-error: Network connectivity issues
+     * - auth/invalid-email: Invalid email format
+     * - auth/user-not-found: No account with this email
+     * - auth/wrong-password: Incorrect password
+     * - auth/storage-error: Failed to save login data
+     * - auth/unknown-error: Unhandled errors
      */
     login: async (email, password) => {
       dispatch({ type: 'SET_LOADING', payload: true });
@@ -183,27 +392,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('AuthContext - Login successful, isAuthenticated should be true');
         
         return true;
-      } catch (e: any) {
-        console.error('AuthContext - Login error:', e);
-        dispatch({ type: 'SET_ERROR', payload: e.message });
-        dispatch({ type: 'SET_LOADING', payload: false });
-        throw e;
+      } catch (error) {
+        console.error('AuthContext - Login error:', error);
+        const normalizedError = normalizeError(error, 'login');
+        dispatch({ type: 'SET_ERROR', payload: normalizedError });
+        return false;
       }
     },
     /**
      * Register a new user and log them in
+     * 
      * @param name - User's name
      * @param email - User's email address
      * @param password - User's password
      * @returns Promise<boolean> - True if registration successful
+     * @throws AuthError - Normalized error with code and user-friendly message
+     * 
+     * Possible error codes:
+     * - auth/network-error: Network connectivity issues
+     * - auth/email-already-in-use: Email already registered
+     * - auth/invalid-email: Invalid email format
+     * - auth/weak-password: Password too short
+     * - auth/username-taken: Username already taken
+     * - auth/invalid-username: Username too short
+     * - auth/registration-failed: General signup failure
+     * - auth/unknown-error: Unhandled errors
      */
     signup: async (name, email, password) => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_ERROR', payload: null });
       
       try {
         await registerUser(email, name, password);
-        // Optional: automatic login after registration
+        // Automatic login after registration
         const user = await loginUser(email, password);
         const userData = { 
           id: user.id || String(Date.now()), 
@@ -222,12 +443,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     /**
      * Log out the current user
+     * Clears user data from AsyncStorage and state
      */
     logout: async () => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-        await AsyncStorage.removeItem('user');
-        dispatch({ type: 'LOGOUT' });
+      await AsyncStorage.removeItem('user');
+      dispatch({ type: 'LOGOUT' });
       } catch (error) {
         console.error('AuthContext - Logout error:', error);
         const normalizedError = normalizeError(error, 'logout');
@@ -238,18 +460,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     /**
      * Update user profile (persists to AsyncStorage and state)
+     * 
      * @param updatedData - Partial user data to update
+     * @throws AuthError - If update fails
      */
     updateProfile: async (updatedData) => {
-      dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
-      
+        
       try {
         const currentUser = state.user;
-      if (!currentUser) return;
-      
-      const updated = await updateUser(currentUser.email, updatedData);
-      await AsyncStorage.setItem('user', JSON.stringify(updated));
+        if (!currentUser) {
+          throw new Error('No user logged in');
+        }
+        
+        const updated = await updateUser(currentUser.email, updatedData);
+        await AsyncStorage.setItem('user', JSON.stringify(updated));
         dispatch({ type: 'UPDATE_USER', payload: updatedData });
         dispatch({ type: 'SET_LOADING', payload: false });
       } catch (error) {

@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
+import { t, pluralize } from '../utils/translations';
 
 // Type de navigation spécifique
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -36,23 +37,14 @@ const HomeScreen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 8;
 
-  // ✅ CALCUL PRÉCIS : Position du FAB en tenant compte de la TabBar et SafeArea
-  const fabBottomPosition = useMemo(() => {
-    // Hauteur de base de la TabBar selon la plateforme
-    const baseTabBarHeight = Platform.OS === 'ios' ? 84 : 70;
-    // Ajout de la safe area pour les appareils avec encoche/barre de geste
-    const totalTabBarHeight = baseTabBarHeight + Math.max(insets.bottom, 0);
-    
-    // Position le FAB à 10px au-dessus de la TabBar
-    return totalTabBarHeight + 10;
-  }, [insets.bottom]);
-
   // ✅ CALCUL : Padding pour la FlatList
   const flatListPaddingBottom = useMemo(() => {
     // Assurer qu'il y a assez d'espace pour voir le dernier produit
-    // TabBar + FAB (56px) + marges (40px) = environ 160px minimum
-    return fabBottomPosition + 56 + 40;
-  }, [fabBottomPosition]);
+    // TabBar + marges (40px) = environ 120px minimum
+    const baseTabBarHeight = Platform.OS === 'ios' ? 84 : 70;
+    const totalTabBarHeight = baseTabBarHeight + Math.max(insets.bottom, 0);
+    return totalTabBarHeight + 40;
+  }, [insets.bottom]);
 
   // ✅ NOUVEAU : Calcul du nombre de filtres actifs
   const activeFiltersCount = useMemo(() => {
@@ -269,7 +261,7 @@ const HomeScreen = () => {
       <View style={styles.searchRow}>
         <View style={{ flex: 1 }}>
           <FormInput
-            label="Rechercher des produits"
+            label={t('search.searchProducts')}
             labelValue={search}
             icon="search"
             handleChange={setSearch}
@@ -328,24 +320,14 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       />
-
-      {/* ✅ CORRIGÉ : FAB avec position parfaite et centrage */}
-      <FloatingActionButton 
-        onPress={handleAddProduct} 
-        color={Colors.light.tint}
-        style={{
-          ...styles.fab,
-          bottom: fabBottomPosition
-        }}
-      />
       
       <FilterModal
         visible={filterModalVisible}
         onClose={() => setFilterModalVisible(false)}
         filters={filters}
         setFilters={setFilters}
-        categories={categories}
-        sellers={sellers}
+        categories={Array.from(new Set(sortedProducts.map(p => p.category)))}
+        sellers={Array.from(new Set(sortedProducts.map(p => p.vendeurs)))}
         onApply={() => setFilterModalVisible(false)}
         onReset={() => setFilters({ 
           category: null, 
@@ -359,7 +341,7 @@ const HomeScreen = () => {
   );
 };
 
-// ✅ STYLES CORRIGÉS avec position optimisée du FAB
+// ✅ STYLES CORRIGÉS sans FAB
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -483,20 +465,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignSelf: 'flex-start',
     marginTop: 8,
-  },
-  
-  // ✅ CORRIGÉ : Style du FAB optimisé et centré
-  fab: {
-    position: 'absolute',
-    alignSelf: 'center', // ✅ Centrage horizontal automatique
-    zIndex: 100, // ✅ Au-dessus de tout
-    // ✅ Ombre douce et élévation
-    shadowColor: Colors.light.tint,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 12,
-    // bottom sera défini dynamiquement via la prop style
   },
   
   paginationContainer: {

@@ -144,7 +144,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     const existingIndex = productsDB.findIndex((p) => p.id === productId);
     
-    if (existingIndex === -1) throw new Error('Product not found');
+    if (existingIndex === -1) throw new Error('Produit introuvable');
     
       const updatedProduct: Product = {
       ...productsDB[existingIndex],
